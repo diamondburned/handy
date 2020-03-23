@@ -15,16 +15,20 @@ func gpointer(ptr unsafe.Pointer) C.gpointer {
 	return C.conptr(ptr)
 }
 
-func nativeWidget(w gtk.IWidget) unsafe.Pointer {
+func nwidget(w gtk.IWidget) unsafe.Pointer {
 	return unsafe.Pointer(w.ToWidget().Native())
 }
 
 func cwidget(w gtk.IWidget) *C.GtkWidget {
-	return (*C.GtkWidget)(nativeWidget(w))
+	return (*C.GtkWidget)(nwidget(w))
 }
 
 func gwidget(w gtk.IWidget) C.gpointer {
 	return gpointer(unsafe.Pointer(w.ToWidget().GObject))
+}
+
+func widget(obj *glib.Object) gtk.Widget {
+	return gtk.Widget{glib.InitiallyUnowned{obj}}
 }
 
 func container(obj *glib.Object) gtk.Container {

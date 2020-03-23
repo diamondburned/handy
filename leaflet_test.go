@@ -7,26 +7,7 @@ import (
 )
 
 func TestLeaflet(t *testing.T) {
-	t.Run("glib properties", func(t *testing.T) {
-		var l = LeafletNew()
-		if err := l.SetProperty("name", "astolfo"); err != nil {
-			t.Fatal("Failed to set property using glib:", err)
-		}
-
-		v, err := l.GetProperty("name")
-		if err != nil {
-			t.Fatal("Failed to get property using glib:", err)
-		}
-
-		name, ok := v.(string)
-		if !ok {
-			t.Fatal("Returned property is not of type string")
-		}
-
-		if name != "astolfo" {
-			t.Fatal("Unexpected name returned:", name)
-		}
-	})
+	t.Run("glib properties", makeTestProperty(LeafletNew()))
 
 	t.Run("fold", func(t *testing.T) {
 		var l = LeafletNew()
