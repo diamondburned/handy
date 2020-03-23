@@ -20,6 +20,8 @@ import (
 // it, including a GtkHeaderBar.
 // HdyTitleBar becomes really useful when you want to animate header bars, like
 // an adaptive application using HdyLeaflet would do.
+//
+// https://developer.puri.sm/projects/libhandy/unstable/HdyTitleBar.html
 type TitleBar struct {
 	gtk.Bin
 }

@@ -29,6 +29,8 @@ const (
 // When there is enough space the children are displayed side by side, otherwise
 // only one is displayed. The threshold is dictated by the preferred minimum
 // sizes of the children.
+//
+// https://developer.puri.sm/projects/libhandy/unstable/HdyLeaflet.html
 type Leaflet struct {
 	gtk.Container
 }

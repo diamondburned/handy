@@ -20,6 +20,8 @@ import (
 //
 // If the child requires more than the requested maximum width, it will be
 // allocated the minimum width it can fit in instead.
+//
+// https://developer.puri.sm/projects/libhandy/unstable/HdyColumn.html
 type Column struct {
 	gtk.Bin
 }
