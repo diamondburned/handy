@@ -10,72 +10,101 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-type TransitionType int
+type LeafletTransitionType int
 
 const (
-	LEAFLET_TRANSITION_TYPE_NONE  TransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_NONE
-	LEAFLET_TRANSITION_TYPE_SLIDE TransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_SLIDE
-	LEAFLET_TRANSITION_TYPE_OVER  TransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_OVER
-	LEAFLET_TRANSITION_TYPE_UNDER TransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_UNDER
+	LEAFLET_TRANSITION_TYPE_NONE  LeafletTransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_NONE
+	LEAFLET_TRANSITION_TYPE_SLIDE LeafletTransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_SLIDE
+	LEAFLET_TRANSITION_TYPE_OVER  LeafletTransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_OVER
+	LEAFLET_TRANSITION_TYPE_UNDER LeafletTransitionType = C.HDY_LEAFLET_TRANSITION_TYPE_UNDER
 )
 
+// Leaflet is an adaptive container acting like a box or a stack.
+//
+// Description
+//
+// The HdyLeaflet widget can display its children like a GtkBox does or like a
+// GtkStack does, adapting to size changes by switching between the two modes.
+// When there is enough space the children are displayed side by side, otherwise
+// only one is displayed. The threshold is dictated by the preferred minimum
+// sizes of the children.
 type Leaflet struct {
 	gtk.Container
 }
 
 func (l *Leaflet) native() *C.HdyLeaflet {
-	if l == nil || l.GObject == nil {
-		return nil
-	}
-	return C.HDY_LEAFLET(gpointer(unsafe.Pointer(l.GObject)))
+	return C.HDY_LEAFLET(gwidget(l))
 }
 
 func LeafletNew() *Leaflet {
 	c := C.hdy_leaflet_new()
 	obj := glib.Take(unsafe.Pointer(c))
-	return &Leaflet{gtk.Container{gtk.Widget{glib.InitiallyUnowned{obj}}}}
+	return &Leaflet{container(obj)}
 }
 
-// func (l *Leaflet) GetFolded() bool {
-// 	c := C.hdy_leaflet_get_folded(l.native())
-// 	return c == C.TRUE
-// }
+// GetFold gets whether self is folded.
+func (l *Leaflet) GetFold() Fold {
+	c := C.hdy_leaflet_get_fold(l.native())
+	return Fold(c)
+}
 
+// GetVisibleChild gets the visible child widget.
 func (l *Leaflet) GetVisibleChild() *gtk.Widget {
 	c := C.hdy_leaflet_get_visible_child(l.native())
 	obj := glib.Take(unsafe.Pointer(c))
 	return &gtk.Widget{glib.InitiallyUnowned{obj}}
 }
 
+// SetVisibleChild makes visible_child visible using a transition determined by
+// HdyLeaflet:transition-type and HdyLeaflet:child-transition-duration. The
+// transition can be cancelled by the user, in which case visible child will
+// change back to the previously visible child.
 func (l *Leaflet) SetVisibleChild(visibleChild gtk.IWidget) {
 	C.hdy_leaflet_set_visible_child(l.native(), cwidget(visibleChild))
 }
 
+// GetVisibleChildName gets the name of the currently visible child widget.
 func (l *Leaflet) GetVisibleChildName() string {
 	c := C.hdy_leaflet_get_visible_child_name(l.native())
 	return C.GoString(c)
 }
 
+// SetVisibleChildName makes the child with the name name visible.
+// See (*Leaflet).SetVisibleChild() for more details.
 func (l *Leaflet) SetVisibleChildName(name string) {
 	C.hdy_leaflet_set_visible_child_name(l.native(), C.CString(name))
 }
 
+// GetHomogeneous gets whether self is homogeneous for the given fold and
+// orientation. See (*Leaflet).SetHomogeneous().
 func (l *Leaflet) GetHomogeneous(fold Fold, orientation gtk.Orientation) bool {
 	c := C.hdy_leaflet_get_homogeneous(l.native(), C.HdyFold(fold), C.GtkOrientation(orientation))
-	return c == C.TRUE
+	return gobool(c)
 }
 
+// SetHomogeneous ets the HdyLeaflet to be homogeneous or not for the given fold
+// and orientation. If it is homogeneous, the HdyLeaflet will request the same
+// width or height for all its children depending on the orientation. If it
+// isn't and it is folded, the leaflet may change width or height when a
+// different child becomes visible.
 func (l *Leaflet) SetHomogeneous(fold Fold, orientation gtk.Orientation, homogeneous bool) {
 	C.hdy_leaflet_set_homogeneous(
 		l.native(), C.HdyFold(fold), C.GtkOrientation(orientation), cbool(homogeneous))
 }
 
-func (l *Leaflet) GetTransitionType() TransitionType {
+// GetTransitionType gets the type of animation that will be used for
+// transitions between modes and children in self.
+func (l *Leaflet) GetTransitionType() LeafletTransitionType {
 	c := C.hdy_leaflet_get_transition_type(l.native())
-	return TransitionType(c)
+	return LeafletTransitionType(c)
 }
 
-func (l *Leaflet) SetTransitionType(transition TransitionType) {
+// SetTransitionType sets the type of animation that will be used for
+// transitions between modes and children in self.
+// The transition type can be changed without problems at runtime, so it is
+// possible to change the animation based on the mode or child that is about to
+// become current.
+func (l *Leaflet) SetTransitionType(transition LeafletTransitionType) {
 	C.hdy_leaflet_set_transition_type(l.native(), C.HdyLeafletTransitionType(transition))
 }
 
@@ -109,14 +138,14 @@ func (l *Leaflet) SetChildTransitionDuration(duration uint) {
 // from one page to another.
 func (l *Leaflet) GetChildTransitionRunning() bool {
 	c := C.hdy_leaflet_get_child_transition_running(l.native())
-	return c == C.TRUE
+	return gobool(c)
 }
 
 // GetInterpolateSize returns wether the HdyLeaflet is set up to interpolate
 // between the sizes of children on page switch.
 func (l *Leaflet) GetInterpolateSize() bool {
 	c := C.hdy_leaflet_get_interpolate_size(l.native())
-	return c == C.TRUE
+	return gobool(c)
 }
 
 // SetInterpolateSize sets whether or not self will interpolate its size when
@@ -132,7 +161,7 @@ func (l *Leaflet) SetInterpolateSize(interpolateSize bool) {
 // child.
 func (l *Leaflet) GetCanSwipeBack() bool {
 	c := C.hdy_leaflet_get_can_swipe_back(l.native())
-	return c == C.TRUE
+	return gobool(c)
 }
 
 // SetCanSwipeBack sets whether or not self allows switching to the previous
@@ -140,4 +169,18 @@ func (l *Leaflet) GetCanSwipeBack() bool {
 // gesture.
 func (l *Leaflet) SetCanSwipeBack(canSwipeBack bool) {
 	C.hdy_leaflet_set_can_swipe_back(l.native(), cbool(canSwipeBack))
+}
+
+// GetCanSwipeForward returns whether the HdyLeaflet allows swiping to the next
+// child.
+func (l *Leaflet) GetCanSwipeForward() bool {
+	c := C.hdy_leaflet_get_can_swipe_forward(l.native())
+	return gobool(c)
+}
+
+// SetCanSwipeForward sets whether or not self allows switching to the next
+// child that has 'allow-visible' child property set to TRUE via a swipe
+// gesture.
+func (l *Leaflet) SetCanSwipeForward(canSwipeForward bool) {
+	C.hdy_leaflet_set_can_swipe_forward(l.native(), cbool(canSwipeForward))
 }
