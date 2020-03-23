@@ -17,6 +17,7 @@ import (
 // The HdyColumn widget limits the size of the widget it contains to a given
 // maximum width. The expansion of the child from its minimum to its maximum
 // size is eased out for a smooth transition.
+//
 // If the child requires more than the requested maximum width, it will be
 // allocated the minimum width it can fit in instead.
 type Column struct {

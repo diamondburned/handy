@@ -25,6 +25,7 @@ const (
 //
 // The HdyLeaflet widget can display its children like a GtkBox does or like a
 // GtkStack does, adapting to size changes by switching between the two modes.
+//
 // When there is enough space the children are displayed side by side, otherwise
 // only one is displayed. The threshold is dictated by the preferred minimum
 // sizes of the children.
