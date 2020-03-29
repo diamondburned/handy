@@ -75,7 +75,10 @@ func (l *Leaflet) GetVisibleChildName() string {
 // SetVisibleChildName makes the child with the name name visible.
 // See (*Leaflet).SetVisibleChild() for more details.
 func (l *Leaflet) SetVisibleChildName(name string) {
-	C.hdy_leaflet_set_visible_child_name(l.native(), C.CString(name))
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	C.hdy_leaflet_set_visible_child_name(l.native(), cname)
 }
 
 // GetHomogeneous gets whether self is homogeneous for the given fold and
