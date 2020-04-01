@@ -4,7 +4,7 @@
 // Copyright (C) 2020 diamondburned
 package handy
 
-// #cgo pkg-config: libhandy-0.0
+// #cgo pkg-config: libhandy-0.0 gtk+-3.0
 // #cgo CPPFLAGS: -DHANDY_USE_UNSTABLE_API
 // #include <handy.h>
 import "C"
