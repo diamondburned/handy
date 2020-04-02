@@ -10,6 +10,17 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
+// PreferencesRow is a gtk.ListBoxRow used to present preferences.
+//
+// Description
+//
+// The HdyPreferencesRow widget has a title that HdyPreferencesWindow will use
+// to let the user look for a preference. It doesn't present the title in any
+// way and it lets you present the preference as you please.
+//
+// HdyActionRow and its derivatives are convenient to use as preference rows as
+// they take care of presenting the preference's title while letting you compose
+// the inputs of the preference around it.
 type PreferencesRow struct {
 	gtk.Box
 }

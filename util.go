@@ -27,8 +27,8 @@ func gwidget(w gtk.IWidget) C.gpointer {
 	return gpointer(unsafe.Pointer(w.ToWidget().GObject))
 }
 
-func widget(obj *glib.Object) gtk.Widget {
-	return gtk.Widget{glib.InitiallyUnowned{obj}}
+func widget(obj *glib.Object) *gtk.Widget {
+	return &gtk.Widget{glib.InitiallyUnowned{obj}}
 }
 
 func container(obj *glib.Object) gtk.Container {
