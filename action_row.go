@@ -32,7 +32,7 @@ func (r *ActionRow) native() *C.HdyActionRow {
 func ActionRowNew() *ActionRow {
 	v := C.hdy_action_row_new()
 	obj := glib.Take(unsafe.Pointer(v))
-	return &ActionRow{PreferencesRow{gtk.Box{container(obj)}}}
+	return &ActionRow{PreferencesRow{gtk.ListBoxRow{gtk.Bin{container(obj)}}}}
 }
 
 func (r *ActionRow) GetTitle() string {

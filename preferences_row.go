@@ -22,7 +22,7 @@ import (
 // they take care of presenting the preference's title while letting you compose
 // the inputs of the preference around it.
 type PreferencesRow struct {
-	gtk.Box
+	gtk.ListBoxRow
 }
 
 func (p *PreferencesRow) native() *C.HdyPreferencesRow {
@@ -32,7 +32,7 @@ func (p *PreferencesRow) native() *C.HdyPreferencesRow {
 func PreferencesRowNew() *PreferencesRow {
 	v := C.hdy_preferences_row_new()
 	obj := glib.Take(unsafe.Pointer(v))
-	return &PreferencesRow{gtk.Box{container(obj)}}
+	return &PreferencesRow{gtk.ListBoxRow{gtk.Bin{container(obj)}}}
 }
 
 func (p *PreferencesRow) GetTitle() string {
