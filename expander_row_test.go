@@ -7,6 +7,11 @@ func TestExpanderRow(t *testing.T) {
 
 	var e = ExpanderRowNew()
 
+	e.SetTitle("hime arikawa")
+	if title := e.GetTitle(); title != "hime arikawa" {
+		t.Fatal("Unexpected title:", title)
+	}
+
 	e.SetExpanded(true)
 	if !e.GetExpanded() {
 		t.Fatal("expanded false")

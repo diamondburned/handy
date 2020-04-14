@@ -24,16 +24,19 @@ func ExpanderRowNew() *ExpanderRow {
 	return &ExpanderRow{PreferencesRow{gtk.ListBoxRow{gtk.Bin{container(obj)}}}}
 }
 
-// func (e *ExpanderRow) GetTitle() string {
-// 	v := C.hdy_expander_row_get_title(e.native())
-// 	return C.GoString(v)
-// }
+// GetTitle sets the "title" property. As hdy_expander_row_set_title isn't
+// available until libhandy v1.0, this is what we'll be using.
+func (e *ExpanderRow) GetTitle() string {
+	v, err := e.GetProperty("title")
+	if err != nil || v == nil {
+		return ""
+	}
+	return v.(string)
+}
 
-// func (e *ExpanderRow) SetTitle(title string) {
-// 	cs := C.CString(title)
-// 	defer C.free(unsafe.Pointer(cs))
-// 	C.hdy_expander_row_set_title(e.native(), cs)
-// }
+func (e *ExpanderRow) SetTitle(title string) {
+	e.SetProperty("title", title)
+}
 
 // func (e *ExpanderRow) GetSubtitle() string {
 // 	v := C.hdy_expander_row_get_subtitle(e.native())
