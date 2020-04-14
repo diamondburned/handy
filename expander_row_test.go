@@ -12,18 +12,18 @@ func TestExpanderRow(t *testing.T) {
 		t.Fatal("Unexpected title:", title)
 	}
 
-	e.SetExpanded(true)
-	if !e.GetExpanded() {
-		t.Fatal("expanded false")
+	e.SetExpanded(false)
+	if e.GetExpanded() {
+		t.Fatal("expanded true")
 	}
 
-	e.SetEnableExpansion(true)
-	if !e.GetEnableExpansion() {
-		t.Fatal("enable expansion false")
+	e.SetEnableExpansion(false)
+	if e.GetEnableExpansion() {
+		t.Fatal("enable expansion true")
 	}
 
-	e.SetShowEnableSwitch(true)
-	if !e.GetShowEnableSwitch() {
-		t.Fatal("show enable switch false")
+	e.SetShowEnableSwitch(false)
+	if e.GetShowEnableSwitch() {
+		t.Fatal("show enable switch true")
 	}
 }

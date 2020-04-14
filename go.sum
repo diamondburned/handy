@@ -1,3 +1,5 @@
+github.com/d2r2/gotk3 v0.0.0-20191124065233-86f7ea85405b h1:7o1Igxy7aj5T4nKHFEFcT3FZAuMDnTfAVuRiDQEQqYU=
+github.com/d2r2/gotk3 v0.0.0-20191124065233-86f7ea85405b/go.mod h1:p/ebwuBvQMyyzFlkpShSAut+4fiNkIDr7kC4zazK82A=
 github.com/gotk3/gotk3 v0.4.0 h1:TIuhyQitGeRTxOQIV3AJlYtEWWJpC74JHwAIsxlH8MU=
 github.com/gotk3/gotk3 v0.4.0/go.mod h1:Eew3QBwAOBTrfFFDmsDE5wZWbcagBL1NUslj1GhRveo=
 github.com/gotk3/gotk3 v0.4.1-0.20200321173312-c4ae30c61acd h1:A6vDe3XuMv5pB3Pxrq5xv4AuVVkjMTp95GpYJ+f9izE=
