@@ -48,7 +48,7 @@ func (p *PreferencesRow) SetTitle(title string) {
 
 func (p *PreferencesRow) GetUseUnderline() bool {
 	v := C.hdy_preferences_row_get_use_underline(p.native())
-	return v == C.TRUE
+	return gobool(v)
 }
 
 func (p *PreferencesRow) SetUseUnderline(useUnderline bool) {
