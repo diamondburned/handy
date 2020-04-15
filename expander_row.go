@@ -11,7 +11,7 @@ import (
 )
 
 type ExpanderRow struct {
-	PreferencesRow
+	ActionRow
 }
 
 func (e *ExpanderRow) native() *C.HdyExpanderRow {
@@ -21,7 +21,7 @@ func (e *ExpanderRow) native() *C.HdyExpanderRow {
 func ExpanderRowNew() *ExpanderRow {
 	v := C.hdy_expander_row_new()
 	obj := glib.Take(unsafe.Pointer(v))
-	return &ExpanderRow{PreferencesRow{gtk.ListBoxRow{gtk.Bin{container(obj)}}}}
+	return &ExpanderRow{ActionRow{PreferencesRow{gtk.ListBoxRow{gtk.Bin{container(obj)}}}}}
 }
 
 // GetTitle sets the "title" property. As hdy_expander_row_set_title isn't
