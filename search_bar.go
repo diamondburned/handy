@@ -32,7 +32,7 @@ func (b *SearchBar) ConnectEntry(entry *gtk.Entry) {
 
 func (b *SearchBar) GetSearchMode() bool {
 	v := C.hdy_search_bar_get_search_mode(b.native())
-	return v == C.TRUE
+	return gobool(v)
 }
 
 func (b *SearchBar) SetSearchMode(searchMode bool) {
@@ -41,7 +41,7 @@ func (b *SearchBar) SetSearchMode(searchMode bool) {
 
 func (b *SearchBar) GetShowCloseButton() bool {
 	v := C.hdy_search_bar_get_show_close_button(b.native())
-	return v == C.TRUE
+	return gobool(v)
 }
 
 func (b *SearchBar) SetShowCloseButton(visible bool) {
@@ -50,5 +50,5 @@ func (b *SearchBar) SetShowCloseButton(visible bool) {
 
 func (b *SearchBar) HandleEvent(ev *gdk.Event) bool {
 	v := C.hdy_search_bar_handle_event(b.native(), (*C.GdkEvent)(ev.GdkEvent))
-	return v == C.TRUE
+	return gobool(v)
 }
