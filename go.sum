@@ -1,6 +1,14 @@
 github.com/d2r2/gotk3 v0.0.0-20191124065233-86f7ea85405b h1:7o1Igxy7aj5T4nKHFEFcT3FZAuMDnTfAVuRiDQEQqYU=
 github.com/d2r2/gotk3 v0.0.0-20191124065233-86f7ea85405b/go.mod h1:p/ebwuBvQMyyzFlkpShSAut+4fiNkIDr7kC4zazK82A=
+github.com/dave/jennifer v1.4.0 h1:tNJFJmLDVTLu+v05mVZ88RINa3vQqnyyWkTKWYz0CwE=
+github.com/dave/jennifer v1.4.0/go.mod h1:fIb+770HOpJ2fmN9EPPKOqm1vMGhB+TwXKMZhrIygKg=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/diamondburned/gotk3 v0.0.0-20200816224505-3cd69b83a48a h1:wEldljb421/Jp84RNb0zBfqmiWt/TTQzUE6R1ap6UuQ=
+github.com/diamondburned/gotk3 v0.0.0-20200816224505-3cd69b83a48a/go.mod h1:/hqFpkNa9T3JgNAE2fLvCdov7c5bw//FHNZrZ3Uv9/Q=
 github.com/gotk3/gotk3 v0.4.0 h1:TIuhyQitGeRTxOQIV3AJlYtEWWJpC74JHwAIsxlH8MU=
 github.com/gotk3/gotk3 v0.4.0/go.mod h1:Eew3QBwAOBTrfFFDmsDE5wZWbcagBL1NUslj1GhRveo=
 github.com/gotk3/gotk3 v0.4.1-0.20200321173312-c4ae30c61acd h1:A6vDe3XuMv5pB3Pxrq5xv4AuVVkjMTp95GpYJ+f9izE=
 github.com/gotk3/gotk3 v0.4.1-0.20200321173312-c4ae30c61acd/go.mod h1:Eew3QBwAOBTrfFFDmsDE5wZWbcagBL1NUslj1GhRveo=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
