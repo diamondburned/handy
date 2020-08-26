@@ -14,39 +14,22 @@ type Method struct {
 	CallableAttrs
 }
 
-// TODO
-// the method generation should use the full parameters, but only generate v%d for some
+func (m Method) GenFunc(parentType string) *jen.Statement {
+	i := firstChar(parentType)
+	p := jen.Id(i).Op("*").Id(parentType)
 
-// // Parameters returns the list of filtered out parameters.
-// func (m Method) Parameters() []Parameter {
-// 	var params []Parameter
-// 	if p := m.CallableAttrs.Parameters; p != nil {
-// 		params = make([]Parameter, 0, len(p.Parameters))
+	var stmt = new(jen.Statement)
+	if m.Doc != nil {
+		stmt.Add(m.Doc.GenGoComments(i, m.GoName()))
+	}
 
-// 		for _, param := range p.Parameters {
-// 			if param.IsIgnored() {
-// 				continue
-// 			}
-
-// 			params = append(params, param)
-// 		}
-// 	}
-
-// 	return params
-// }
-
-func (m Method) GenFunc(c Class) *jen.Statement {
-	i := jen.Id(firstChar(c.Name))
-	p := jen.Add(i).Op("*").Id(c.Name)
-
-	stmt := jen.Func().Params(p)
-	stmt.Id(m.GoType())
+	stmt.Func().Params(p).Id(m.GoName())
 
 	var parm = []Parameter{}
 	if m.Parameters != nil {
 		parm = m.Parameters.Parameters
 	}
-	var args = make(map[string]*jen.Statement, len(parm))
+	var args = make(map[string]*jen.Statement, len(parm)+1)
 
 	// Generate the parameters in the function signature.
 	stmt.ParamsFunc(func(g *jen.Group) {
@@ -68,14 +51,13 @@ func (m Method) GenFunc(c Class) *jen.Statement {
 
 	// List of arguments to call the C function. Not to be confused with the
 	// above list of arguments to call the current Go function.
-	var cargs = make(map[string]*jen.Statement, len(parm))
+	var cargs = make(map[string]*jen.Statement, len(parm)+1)
 
 	// Generate the value type converters in the function body.
 	stmt.BlockFunc(func(g *jen.Group) {
 		for i, param := range parm {
-			// Only create needed values.
-			if arg, ok := args[param.Name]; ok {
-				valueVar := jen.Id(fmt.Sprintf("v%d", i+1))
+			if arg, hasArgument := args[param.Name]; hasArgument {
+				var valueVar = jen.Id(fmt.Sprintf("v%d", i+1))
 				cargs[param.Name] = valueVar
 
 				g.Add(param.GenValueCall(arg, valueVar))
@@ -89,14 +71,26 @@ func (m Method) GenFunc(c Class) *jen.Statement {
 		g.Add(m.ReturnValue.GenReturnFunc(
 			jen.Qual("C", m.CIdentifier).ParamsFunc(func(g *jen.Group) {
 				if m.HasInstanceParameter() {
-					g.Add(jen.Add(i).Op(".").Id("native").Call())
+					g.Add(jen.Id(i).Op(".").Id("native").Call())
 				}
 
-				for _, param := range parm {
-					a, ok := cargs[param.Name]
-					if ok {
-						g.Add(a)
-					} else {
+				for i, param := range parm {
+					switch arg, hasCArgument := cargs[param.Name]; {
+					case hasCArgument:
+						g.Add(arg)
+
+					// Treat UserData and UserDataFreeFunc specially.
+					case param.IsUserData():
+						if callback := m.UserDataParameter(i); callback != nil {
+							g.Add(CallbackGenAssign(args[callback.Name]))
+						} else {
+							g.Add(param.Type.ZeroValue())
+						}
+
+					case param.IsUserDataFreeFunc():
+						g.Add(CallbackGenDelete())
+
+					default:
 						// Add as a constant to allow implicit type casting.
 						g.Add(param.Type.ZeroValue())
 					}
@@ -108,10 +102,6 @@ func (m Method) GenFunc(c Class) *jen.Statement {
 	return stmt
 }
 
-func (m Method) GoType() string {
+func (m Method) GoName() string {
 	return snakeToGo(true, m.Name)
-}
-
-func (m Method) Type() *jen.Statement {
-	return jen.Id(m.GoType())
 }

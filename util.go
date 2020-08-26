@@ -92,7 +92,7 @@ func castInternal(className string, obj *glib.Object) (interface{}, error) {
 func cast(c *C.GObject) (glib.IObject, error) {
 	ptr := unsafe.Pointer(c)
 	var (
-		className = C.GoString(C.object_get_class_name(C.toGObject(ptr)))
+		className = C.GoString(C.object_get_class_name(c))
 		obj       = glib.Take(ptr)
 	)
 
@@ -113,7 +113,7 @@ func cast(c *C.GObject) (glib.IObject, error) {
 func castWidget(c *C.GtkWidget) (gtk.IWidget, error) {
 	ptr := unsafe.Pointer(c)
 	var (
-		className = C.GoString(C.object_get_class_name(C.toGObject(ptr)))
+		className = C.GoString(C.object_get_class_name(c))
 		obj       = glib.Take(ptr)
 	)
 
