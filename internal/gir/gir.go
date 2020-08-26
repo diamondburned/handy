@@ -67,7 +67,6 @@ func NewGotk3Generator(name string) *jen.File {
 			jen.Uintptr().Call(jen.Id("ptr")),
 		),
 	)
-
 	f.Line()
 
 	f.Comment("objector is used internally for other interfaces.")
@@ -95,14 +94,15 @@ func NewGotk3Generator(name string) *jen.File {
 			Call().
 			Parens(jen.Uintptr()),
 	)
-
 	f.Line()
 
 	f.Comment("asserting objector interface")
 	f.Var().Id("_").Id("objector").Op("=").
 		Parens(jen.Op("*").Qual("github.com/gotk3/gotk3/glib", "Object")).
 		Call(jen.Nil())
+	f.Line()
 
+	f.Add(GenCasterInterface())
 	f.Line()
 
 	return f
@@ -169,6 +169,8 @@ func EmbeddedFieldNoPanic(goType string) string {
 		return "gtk.Bin"
 	case "gtk.HeaderBar":
 		fallthrough
+	case "gtk.Stack":
+		fallthrough
 	case "gtk.Bin":
 		return "gtk.Container"
 	case "gtk.Entry":
@@ -230,6 +232,12 @@ func GenMarshalerItem(getType, typeName string) *jen.Statement {
 // resolveWrapValues resolves embedded struct fields. Note that only
 // *glib.Object is allowed to be a pointer in childType.
 func resolveWrapValues(childType string, implements ...Implements) *jen.Statement {
+	return resolveWrapValueField(childType, "", implements...)
+}
+
+// resolveWrapValueField does what resolveWrapValues does but iwth a custom
+// field name.
+func resolveWrapValueField(childType, fieldN string, implements ...Implements) *jen.Statement {
 	switch childType {
 	case "*glib.Object":
 		return jen.Id("obj")
@@ -238,7 +246,19 @@ func resolveWrapValues(childType string, implements ...Implements) *jen.Statemen
 	}
 
 	var embedT = EmbeddedField(childType)
-	var fieldN = fieldNameFromType(embedT)
+	if fieldN == "" {
+		fieldN = fieldNameFromType(embedT)
+	}
+
+	// Treat interfaces specially.
+	if iface := activeNamespace.FindInterface(childType); iface != nil {
+		// TODO: confirm this is not needed.
+		if len(implements) > 0 {
+			log.Panicf("Interface %s shouldn't have implements\n", iface.Name)
+		}
+
+		return GenInterfaceWrapper(iface.GoName(), iface.RequiresWidget())
+	}
 
 	var values = jen.Statement{
 		jen.Id(fieldN).Op(":").Add(resolveWrapValues(embedT)).Op(",").Line(),
@@ -247,7 +267,7 @@ func resolveWrapValues(childType string, implements ...Implements) *jen.Statemen
 	for _, impls := range implements {
 		if iface := activeNamespace.FindInterface(impls.Name); iface != nil {
 			values.Add(jen.Id(iface.GoName()).Op(":").Add(
-				GenInterfaceWrappper(iface.Name, iface.RequiresWidget()),
+				GenInterfaceWrapper(iface.Name, iface.RequiresWidget()),
 			))
 			values.Op(",").Line()
 			continue

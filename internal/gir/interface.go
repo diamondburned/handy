@@ -18,22 +18,38 @@ type Prerequisite struct {
 	Name    string   `xml:"name,attr"`
 }
 
-// TODO:
-// - On each class that impls interface, generate more methods on the interface
-// - Generate a global Interfacer interface
-
 // GenInterfaceWrappper generates the interface struct. This function assumes
 // the object is named "obj".
-func GenInterfaceWrappper(ifaceGObjName string, widget bool) *jen.Statement {
+func GenInterfaceWrapper(ifaceGObjName string, widget bool) *jen.Statement {
 	// Ignore pointers.
 	ifaceGObjName = strings.TrimSuffix(ifaceGObjName, "*")
 
 	var stmt = TypeMap(ifaceGObjName)
-	if widget {
-		stmt.Values(resolveWrapValues("gtk.Widget"))
-	} else {
-		stmt.Values(jen.Id("obj"))
+	if !widget {
+		return stmt.Values(jen.Id("obj"))
 	}
+
+	return stmt.Values(
+		jen.Line().Id("Caster").Op(":").Op("&").Add(
+			resolveWrapValues("gtk.Widget").Op(",").Line(),
+		),
+	)
+}
+
+// GenCasterInterface generates the constant caster interface that helps conceal
+// the underlying Widget.
+func GenCasterInterface() *jen.Statement {
+	stmt := jen.Comment("Caster is the interface that allows casting objects to widgets.")
+	stmt.Line()
+	stmt.Type().Id("Caster").Interface(
+		jen.Id("objector"),
+		jen.Id("Cast").Params().Params(
+			jen.Qual("github.com/gotk3/gotk3/gtk", "IWidget"),
+			jen.Error(),
+		),
+	)
+	stmt.Line()
+
 	return stmt
 }
 
@@ -101,7 +117,7 @@ func (i Interface) CGoType() string {
 func (i Interface) GenType() *jen.Statement {
 	var stmt = jen.Type().Id(i.GoName())
 	if i.RequiresWidget() {
-		stmt.Struct(jen.Qual("github.com/gotk3/gotk3/gtk", "Widget"))
+		stmt.Struct(jen.Id("Caster"))
 	} else {
 		stmt.Struct(TypeMap("GObject.Object"))
 	}
@@ -142,7 +158,12 @@ func (i Interface) GoName() string {
 
 // InterfaceName generates an idiomatic Go interface name.
 func (i Interface) InterfaceName() string {
-	var name = strings.TrimSuffix(i.Name, "able")
+	return InterfaceName(i.Name)
+}
+
+// InterfaceName turns glib interface naming conventions to Go.
+func InterfaceName(ifaceName string) string {
+	var name = strings.TrimSuffix(ifaceName, "able")
 	if !strings.HasSuffix(name, "e") {
 		name += "er"
 	} else {
@@ -154,14 +175,15 @@ func (i Interface) InterfaceName() string {
 
 func (i Interface) GenInterface() *jen.Statement {
 	var name = i.InterfaceName()
-	var methods = jen.Statement{
-		// Always implement a base GObject interface.
-		jen.Id("objector"),
-	}
+	var methods = jen.Statement{}
 
-	// Add IWidget for Cast() and such.
+	// Always implement either a base GObject interface or the widget caster
+	// interface.
+
 	if i.RequiresWidget() {
-		methods = append(methods, jen.Qual("github.com/gotk3/gotk3/gtk", "IWidget"))
+		methods = append(methods, jen.Id("Caster"))
+	} else {
+		methods = append(methods, jen.Id("objector"))
 	}
 
 	for _, m := range i.Methods {

@@ -41,12 +41,12 @@ func (m Method) GenFunc(parentType string) *jen.Statement {
 			n := jen.Id(param.GoName())
 			args[param.Name] = n
 
-			g.Add(n, param.Type.Type())
+			g.Add(n, param.Type.TypeParam())
 		}
 	})
 
 	if m.ReturnValue != nil {
-		stmt.Add(m.ReturnValue.Type.Type())
+		stmt.Add(m.ReturnValue.Type.TypeParam())
 	}
 
 	// List of arguments to call the C function. Not to be confused with the

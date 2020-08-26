@@ -113,7 +113,7 @@ func cast(c *C.GObject) (glib.IObject, error) {
 func castWidget(c *C.GtkWidget) (gtk.IWidget, error) {
 	ptr := unsafe.Pointer(c)
 	var (
-		className = C.GoString(C.object_get_class_name(c))
+		className = C.GoString(C.object_get_class_name(C.toGObject(ptr)))
 		obj       = glib.Take(ptr)
 	)
 

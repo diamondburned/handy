@@ -39,6 +39,12 @@ type objector interface {
 // asserting objector interface
 var _ objector = (*glib.Object)(nil)
 
+// Caster is the interface that allows casting objects to widgets.
+type Caster interface {
+	objector
+	Cast() (gtk.IWidget, error)
+}
+
 func init() {
 	glib.RegisterGValueMarshalers([]glib.TypeMarshaler{
 		// Enums
@@ -213,8 +219,7 @@ const (
 )
 
 type Swiper interface {
-	objector
-	gtk.IWidget
+	Caster
 	// EmitChildSwitched emits HdySwipeable::child-switched signal. This should be
 	// called when the widget switches visible child widget.
 	//
@@ -246,7 +251,7 @@ type Swiper interface {
 }
 
 type Swipeable struct {
-	gtk.Widget
+	Caster
 }
 
 // native turns the current *Swipeable into the native C pointer type.
@@ -691,11 +696,13 @@ func wrapCarousel(ptr unsafe.Pointer) *Carousel {
 			},
 		},
 		Orientable: gtk.Orientable{obj},
-		Swipeable: Swipeable{gtk.Widget{
-			InitiallyUnowned: glib.InitiallyUnowned{
-				Object: obj,
+		Swipeable: Swipeable{
+			Caster: &gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
 			},
-		}},
+		},
 	}
 }
 
@@ -1162,11 +1169,13 @@ func wrapDeck(ptr unsafe.Pointer) *Deck {
 			},
 		},
 		Orientable: gtk.Orientable{obj},
-		Swipeable: Swipeable{gtk.Widget{
-			InitiallyUnowned: glib.InitiallyUnowned{
-				Object: obj,
+		Swipeable: Swipeable{
+			Caster: &gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
 			},
-		}},
+		},
 	}
 }
 
@@ -2040,11 +2049,13 @@ func wrapLeaflet(ptr unsafe.Pointer) *Leaflet {
 			},
 		},
 		Orientable: gtk.Orientable{obj},
-		Swipeable: Swipeable{gtk.Widget{
-			InitiallyUnowned: glib.InitiallyUnowned{
-				Object: obj,
+		Swipeable: Swipeable{
+			Caster: &gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
 			},
-		}},
+		},
 	}
 }
 
@@ -2829,8 +2840,8 @@ func (s *SwipeGroup) native() *C.HdySwipeGroup {
 
 // AddSwipeable when the widget is destroyed or no longer referenced elsewhere,
 // it will be removed from the swipe group.
-func (s *SwipeGroup) AddSwipeable(swipeable Swipeable) {
-	v1 := (*C.HdySwipeable)(unsafe.Pointer(swipeable.Widget.Native()))
+func (s *SwipeGroup) AddSwipeable(swipeable Swiper) {
+	v1 := (*C.HdySwipeable)(unsafe.Pointer(swipeable.Native()))
 	C.hdy_swipe_group_add_swipeable(s.native(), v1)
 }
 
@@ -2841,8 +2852,8 @@ func (s *SwipeGroup) GetSwipeables() *glib.SList {
 }
 
 // RemoveSwipeable removes a widget from a SwipeGroup.
-func (s *SwipeGroup) RemoveSwipeable(swipeable Swipeable) {
-	v1 := (*C.HdySwipeable)(unsafe.Pointer(swipeable.Widget.Native()))
+func (s *SwipeGroup) RemoveSwipeable(swipeable Swiper) {
+	v1 := (*C.HdySwipeable)(unsafe.Pointer(swipeable.Native()))
 	C.hdy_swipe_group_remove_swipeable(s.native(), v1)
 }
 
@@ -2868,7 +2879,7 @@ func marshalSwipeTracker(p uintptr) (interface{}, error) {
 
 // SwipeTrackerNew create a new SwipeTracker object on widget.
 func SwipeTrackerNew(swipeable Swipeable) *SwipeTracker {
-	v1 := (*C.HdySwipeable)(unsafe.Pointer(swipeable.Widget.Native()))
+	v1 := (*C.HdySwipeable)(unsafe.Pointer(swipeable.Native()))
 	return wrapSwipeTracker(unsafe.Pointer(C.hdy_swipe_tracker_new(v1)))
 }
 
@@ -2897,10 +2908,10 @@ func (s *SwipeTracker) GetReversed() bool {
 }
 
 // GetSwipeable get s's swipeable widget.
-func (s *SwipeTracker) GetSwipeable() Swipeable {
+func (s *SwipeTracker) GetSwipeable() Swiper {
 	obj := glib.Take(unsafe.Pointer(C.hdy_swipe_tracker_get_swipeable(s.native())))
 	r := &Swipeable{
-		Widget: gtk.Widget{
+		Caster: &gtk.Widget{
 			InitiallyUnowned: glib.InitiallyUnowned{
 				Object: obj,
 			},
@@ -3047,7 +3058,7 @@ func (v *ValueObject) GetString() string {
 
 // GetValue return the contained value.
 func (v *ValueObject) GetValue() *glib.Value {
-	r := (*glib.Value)(C.hdy_value_object_get_value(v.native()))
+	r := glib.ValueFromNative((unsafe.Pointer(C.hdy_value_object_get_value(v.native()))))
 	return r
 }
 
@@ -3102,14 +3113,23 @@ func (v *ViewSwitcher) GetPolicy() ViewSwitcherPolicy {
 //
 // See: (*ViewSwitcher).SetStack()
 func (v *ViewSwitcher) GetStack() *gtk.Stack {
-	r := (*gtk.Stack)(C.hdy_view_switcher_get_stack(v.native()))
+	obj := glib.Take(unsafe.Pointer(C.hdy_view_switcher_get_stack(v.native())))
+	r := &gtk.Stack{
+		Container: gtk.Container{
+			Widget: gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
+			},
+		},
+	}
 	return r
 }
 
 // SetNarrowEllipsize set the mode used to ellipsize the text in narrow mode if
 // there is not enough space to render the entire string.
 func (v *ViewSwitcher) SetNarrowEllipsize(mode pango.EllipsizeMode) {
-	v1 := (C.PangoEllipsizeMode)(unsafe.Pointer(mode.Native()))
+	v1 := C.PangoEllipsizeMode(mode)
 	C.hdy_view_switcher_set_narrow_ellipsize(v.native(), v1)
 }
 
@@ -3121,7 +3141,7 @@ func (v *ViewSwitcher) SetPolicy(policy ViewSwitcherPolicy) {
 
 // SetStack sets the Stack to control.
 func (v *ViewSwitcher) SetStack(stack *gtk.Stack) {
-	v1 := (*C.GtkStack)(unsafe.Pointer(stack.Native()))
+	v1 := (*C.GtkStack)(unsafe.Pointer(stack.Widget.Native()))
 	C.hdy_view_switcher_set_stack(v.native(), v1)
 }
 
@@ -3173,7 +3193,16 @@ func (v *ViewSwitcherBar) GetReveal() bool {
 
 // GetStack get the Stack being controlled by the ViewSwitcher.
 func (v *ViewSwitcherBar) GetStack() *gtk.Stack {
-	r := (*gtk.Stack)(C.hdy_view_switcher_bar_get_stack(v.native()))
+	obj := glib.Take(unsafe.Pointer(C.hdy_view_switcher_bar_get_stack(v.native())))
+	r := &gtk.Stack{
+		Container: gtk.Container{
+			Widget: gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
+			},
+		},
+	}
 	return r
 }
 
@@ -3191,7 +3220,7 @@ func (v *ViewSwitcherBar) SetReveal(reveal bool) {
 
 // SetStack sets the Stack to control.
 func (v *ViewSwitcherBar) SetStack(stack *gtk.Stack) {
-	v1 := (*C.GtkStack)(unsafe.Pointer(stack.Native()))
+	v1 := (*C.GtkStack)(unsafe.Pointer(stack.Widget.Native()))
 	C.hdy_view_switcher_bar_set_stack(v.native(), v1)
 }
 
@@ -3237,7 +3266,16 @@ func (v *ViewSwitcherTitle) GetPolicy() ViewSwitcherPolicy {
 
 // GetStack get the Stack being controlled by the ViewSwitcher.
 func (v *ViewSwitcherTitle) GetStack() *gtk.Stack {
-	r := (*gtk.Stack)(C.hdy_view_switcher_title_get_stack(v.native()))
+	obj := glib.Take(unsafe.Pointer(C.hdy_view_switcher_title_get_stack(v.native())))
+	r := &gtk.Stack{
+		Container: gtk.Container{
+			Widget: gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
+			},
+		},
+	}
 	return r
 }
 
@@ -3275,7 +3313,7 @@ func (v *ViewSwitcherTitle) SetPolicy(policy ViewSwitcherPolicy) {
 
 // SetStack sets the Stack to control.
 func (v *ViewSwitcherTitle) SetStack(stack *gtk.Stack) {
-	v1 := (*C.GtkStack)(unsafe.Pointer(stack.Native()))
+	v1 := (*C.GtkStack)(unsafe.Pointer(stack.Widget.Native()))
 	C.hdy_view_switcher_title_set_stack(v.native(), v1)
 }
 

@@ -40,12 +40,13 @@ func (f Function) GenFunc() *jen.Statement {
 			n := jen.Id(param.GoName())
 			args[param.Name] = n
 
-			g.Add(n, param.Type.Type())
+			// Is this an interface? If yes, then treat it specially.
+			g.Add(n, param.Type.TypeParam())
 		}
 	})
 
 	if f.ReturnValue != nil {
-		stmt.Add(f.ReturnValue.Type.Type())
+		stmt.Add(f.ReturnValue.Type.TypeParam())
 	}
 
 	// List of arguments to call the C function. Not to be confused with the

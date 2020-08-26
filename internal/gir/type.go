@@ -64,6 +64,15 @@ func (t Type) GoType() string {
 	return t.Type().GoString()
 }
 
+// TypeParam returns a type specifically used for interface
+func (t Type) TypeParam() *jen.Statement {
+	if t.IsInterface() {
+		return jen.Id(InterfaceName(t.GoType()))
+	}
+
+	return t.Type()
+}
+
 // Type returns the generated Go type in Go code.
 func (t Type) Type() *jen.Statement {
 	return t.Map()
@@ -243,6 +252,11 @@ func (t Type) GenCaster(tmpVar, value *jen.Statement) *jen.Statement {
 		// Enforce a non-pointer when using resolveWrapValues.
 		return genObjectCtor(value, tmpVar).Op("&").Add(resolveWrapValues("glib.ListModel"))
 
+	case "glib.Value", "*glib.Value":
+		return stmt.Qual("github.com/gotk3/gotk3/glib", "ValueFromNative").Call(
+			jen.Call(jen.Qual("unsafe", "Pointer").Call(value)),
+		)
+
 	default:
 		switch {
 		case t.IsFunc():
@@ -337,6 +351,7 @@ func (t Type) IsNamespaceFunc() bool {
 var knownEnums = []string{
 	"Gtk.Orientation",
 	"Gtk.IconSize",
+	"Pango.EllipsizeMode",
 }
 
 func (t Type) IsEnum() bool {
@@ -378,8 +393,6 @@ func (t Type) GenCCaster(value *jen.Statement) *jen.Statement {
 		return jen.Id("cwidget").Call(value)
 	case "glib.Type":
 		return jen.Qual("C", "GType").Call(value)
-	// case "glib.Rectangle":
-	// 	return jen.Add(value).Dot("GdkRectangle")
 	case "*gdk.Rectangle":
 		return jen.Parens(jen.Op("*").Qual("C", "GdkRectangle")).Call(
 			jen.Qual("unsafe", "Pointer").Call(jen.Op("&").Add(value).Dot("GdkRectangle")),
@@ -399,7 +412,7 @@ func (t Type) GenCCaster(value *jen.Statement) *jen.Statement {
 		var derefType = strings.TrimPrefix(goType, "*")
 
 		switch {
-		case EmbeddedFieldCheck(derefType, "gtk.Widget"):
+		case EmbeddedFieldCheck(derefType, "gtk.Widget") && !t.IsInterface():
 			// Avoid an ambiguous selector.
 			value = value.Clone().Dot("Widget")
 		}
