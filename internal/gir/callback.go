@@ -124,6 +124,17 @@ func (c Callback) GenGlobalGoFunction() *jen.Statement {
 		}))
 
 		if !c.ReturnValue.IsVoid() {
+			// See if the return value is a pointer. If yes, then we must add a
+			// reference: one for Gtk and the other for Go's GC.
+
+			// This check is meant to check for objects, but there isn't a good
+			// way to. The commonly known exception to pointers not to an object
+			// is *gchar aka utf8, so we filter for that.
+
+			if c.ReturnValue.Type.IsPtr() && c.ReturnValue.Type.Name != "utf8" {
+				g.Add(jen.Id("v").Dot("Ref").Call())
+			}
+
 			g.Return(c.ReturnValue.Type.GenCCaster(jen.Id("v")))
 		}
 	})

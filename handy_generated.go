@@ -337,6 +337,7 @@ func callbackAvatarImageLoadFunc(size C.gint, userData C.gpointer) *C.GdkPixbuf 
 	arg0 := int(size)
 
 	v := fn.(AvatarImageLoadFunc)(arg0)
+	v.Ref()
 	return (*C.GdkPixbuf)(unsafe.Pointer(v.Native()))
 }
 

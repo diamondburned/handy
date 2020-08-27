@@ -161,26 +161,31 @@ func EmbeddedFieldNoPanic(goType string) string {
 	switch goType {
 	case "gtk.ApplicationWindow": // TODO: handle interfaces inside here
 		return "gtk.Window"
+
 	case "gtk.Window":
 		fallthrough
 	case "gtk.ListBoxRow":
 		fallthrough
 	case "gtk.EventBox":
 		return "gtk.Bin"
+
 	case "gtk.HeaderBar":
 		fallthrough
 	case "gtk.Stack":
 		fallthrough
 	case "gtk.Bin":
 		return "gtk.Container"
+
 	case "gtk.Entry":
 		fallthrough
 	case "gtk.Container":
 		fallthrough
 	case "gtk.DrawingArea":
 		return "gtk.Widget"
+
 	case "gtk.Widget":
 		return "glib.InitiallyUnowned"
+
 	case "glib.InitiallyUnowned":
 		fallthrough
 	case "glib.ListModel":
