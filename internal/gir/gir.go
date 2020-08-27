@@ -271,7 +271,7 @@ func resolveWrapValueField(childType, fieldN string, implements ...Implements) *
 
 	for _, impls := range implements {
 		if iface := activeNamespace.FindInterface(impls.Name); iface != nil {
-			values.Add(jen.Id(iface.GoName()).Op(":").Add(
+			values.Add(jen.Id(iface.InterfaceName()).Op(":").Op("&").Add(
 				GenInterfaceWrapper(iface.Name, iface.RequiresWidget()),
 			))
 			values.Op(",").Line()

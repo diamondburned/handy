@@ -75,9 +75,9 @@ func (c Class) GenType() *jen.Statement {
 			// avoids ambiguous selectors.
 			// TODO: make gotk3 do this too. This is useless as long as gotk3's
 			// interfaces are still bad.
-			// ifaceFields.Id(iface.InterfaceName())
+			ifaceFields.Id(iface.InterfaceName())
 
-			ifaceFields.Id(iface.GoName())
+			// ifaceFields.Id(iface.GoName())
 			continue
 		}
 

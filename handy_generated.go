@@ -678,7 +678,7 @@ type Carousel struct {
 
 	// Interfaces
 	gtk.Orientable
-	Swipeable
+	Swiper
 }
 
 // wrapCarousel wraps the given pointer to *Carousel.
@@ -697,7 +697,7 @@ func wrapCarousel(ptr unsafe.Pointer) *Carousel {
 			},
 		},
 		Orientable: gtk.Orientable{obj},
-		Swipeable: Swipeable{
+		Swiper: &Swipeable{
 			Caster: &gtk.Widget{
 				InitiallyUnowned: glib.InitiallyUnowned{
 					Object: obj,
@@ -1155,7 +1155,7 @@ type Deck struct {
 
 	// Interfaces
 	gtk.Orientable
-	Swipeable
+	Swiper
 }
 
 // wrapDeck wraps the given pointer to *Deck.
@@ -1170,7 +1170,7 @@ func wrapDeck(ptr unsafe.Pointer) *Deck {
 			},
 		},
 		Orientable: gtk.Orientable{obj},
-		Swipeable: Swipeable{
+		Swiper: &Swipeable{
 			Caster: &gtk.Widget{
 				InitiallyUnowned: glib.InitiallyUnowned{
 					Object: obj,
@@ -2035,7 +2035,7 @@ type Leaflet struct {
 
 	// Interfaces
 	gtk.Orientable
-	Swipeable
+	Swiper
 }
 
 // wrapLeaflet wraps the given pointer to *Leaflet.
@@ -2050,7 +2050,7 @@ func wrapLeaflet(ptr unsafe.Pointer) *Leaflet {
 			},
 		},
 		Orientable: gtk.Orientable{obj},
-		Swipeable: Swipeable{
+		Swiper: &Swipeable{
 			Caster: &gtk.Widget{
 				InitiallyUnowned: glib.InitiallyUnowned{
 					Object: obj,
