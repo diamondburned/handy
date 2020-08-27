@@ -71,6 +71,12 @@ func (c Class) GenType() *jen.Statement {
 
 	for _, impls := range c.Implements {
 		if iface := activeNamespace.FindInterface(impls.Name); iface != nil {
+			// Use interfaces to conceal the underlying GObject methods which
+			// avoids ambiguous selectors.
+			// TODO: make gotk3 do this too. This is useless as long as gotk3's
+			// interfaces are still bad.
+			// ifaceFields.Id(iface.InterfaceName())
+
 			ifaceFields.Id(iface.GoName())
 			continue
 		}
