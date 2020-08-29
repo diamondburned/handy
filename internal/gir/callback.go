@@ -132,7 +132,9 @@ func (c Callback) GenGlobalGoFunction() *jen.Statement {
 			// is *gchar aka utf8, so we filter for that.
 
 			if c.ReturnValue.Type.IsPtr() && c.ReturnValue.Type.Name != "utf8" {
-				g.Add(jen.Id("v").Dot("Ref").Call())
+				g.If(jen.Id("v").Op("!=").Nil()).Block(
+					jen.Id("v").Dot("Ref").Call(),
+				)
 			}
 
 			g.Return(c.ReturnValue.Type.GenCCaster(jen.Id("v")))
