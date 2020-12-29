@@ -1,10 +1,11 @@
 { pkgs ? import <nixpkgs> {} }:
 
 let libhandy = pkgs.libhandy.overrideAttrs(old: {
-	name = "libhandy-0.90.0";
+	name = "libhandy-1.0.3";
 	src  = builtins.fetchGit {
 		url = "https://gitlab.gnome.org/GNOME/libhandy.git";
-		rev = "c7aaf6f4f50b64ee55fcfee84000e9525fc5f93a";
+		rev = "7126d2e8da9dcdeb5751e60ff6a74930804f9637";
+		ref = "libhandy-1-0";
 	};
 	patches = [];
 
@@ -15,7 +16,7 @@ let libhandy = pkgs.libhandy.overrideAttrs(old: {
 });
 
 in pkgs.stdenv.mkDerivation rec {
-	name = "gohandy";
+	name = "handy";
 
 	buildInputs = [ libhandy ] ++ (with pkgs; [
 		gnome3.glib gnome3.gtk

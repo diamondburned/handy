@@ -73,17 +73,11 @@ func NewGotk3Generator(name string) *jen.File {
 	f.Type().Id("objector").Interface(
 		jen.Qual("github.com/gotk3/gotk3/glib", "IObject"),
 		jen.Id("Connect").
-			Call(jen.String(), jen.Interface(), jen.Op("...").Interface()).
-			Parens(jen.List(
-				jen.Qual("github.com/gotk3/gotk3/glib", "SignalHandle"),
-				jen.Error(),
-			)),
+			Call(jen.String(), jen.Interface()).
+			Qual("github.com/gotk3/gotk3/glib", "SignalHandle"),
 		jen.Id("ConnectAfter").
-			Call(jen.String(), jen.Interface(), jen.Op("...").Interface()).
-			Parens(jen.List(
-				jen.Qual("github.com/gotk3/gotk3/glib", "SignalHandle"),
-				jen.Error(),
-			)),
+			Call(jen.String(), jen.Interface()).
+			Qual("github.com/gotk3/gotk3/glib", "SignalHandle"),
 		jen.Id("GetProperty").
 			Call(jen.Id("name").String()).
 			Parens(jen.List(jen.Interface(), jen.Error())),

@@ -2,7 +2,7 @@ module github.com/diamondburned/handy
 
 go 1.13
 
-replace github.com/gotk3/gotk3 => github.com/diamondburned/gotk3 v0.0.0-20200816224505-3cd69b83a48a
+replace github.com/gotk3/gotk3 => github.com/diamondburned/gotk3 v0.0.0-20201229054305-848200601f20
 
 require (
 	github.com/dave/jennifer v1.4.0
