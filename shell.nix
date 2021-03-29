@@ -1,25 +1,42 @@
 { pkgs ? import <nixpkgs> {} }:
 
-let libhandy = pkgs.libhandy.overrideAttrs(old: {
-	name = "libhandy-1.0.3";
-	src  = builtins.fetchGit {
-		url = "https://gitlab.gnome.org/GNOME/libhandy.git";
-		rev = "7126d2e8da9dcdeb5751e60ff6a74930804f9637";
-		ref = "libhandy-1-0";
-	};
-	patches = [];
+let updateScript = pkgs.runCommandLocal "notify" {
+	src = ./.;
+} ''
+	gir_version() {
+		[[ $(< "$1") =~ repository\ version=\"([0-9.]+)\" ]] && \
+			echo -n "''${BASH_REMATCH[1]}"
+	}
 
-	buildInputs = old.buildInputs ++ (with pkgs; [
-		gnome3.librsvg
-		gdk-pixbuf
-	]);
-});
+	main() {
+		echo
+		newHandy="${pkgs.libhandy.dev}/share/gir-1.0/Handy-1.gir"
 
-in pkgs.stdenv.mkDerivation rec {
-	name = "handy";
+		cmp -s "$src/Handy-1.gir" "$newHandy" && {
+			echo "Local Handy-1.gir is the same as generated."
+			return
+		}
 
-	buildInputs = [ libhandy ] ++ (with pkgs; [
-		gnome3.glib gnome3.gtk
-		pkgconfig go
-	]);
+		echo "Local Handy-1.gir is older/different from upstream."
+		echo "To synchronize them, run:"
+		echo -e "\tcp -f $newHandy ./"
+		echo -e "\tgo generate ./..."
+	}
+
+	main "$@"
+	mkdir -p "$out"
+'';
+
+in pkgs.mkShell {
+	buildInputs = with pkgs; [
+		libhandy
+		gnome3.glib
+		gnome3.gtk
+	];
+
+	nativeBuildInputs = [
+		updateScript
+		pkgs.pkgconfig
+		pkgs.go
+	];
 }

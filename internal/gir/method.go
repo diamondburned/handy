@@ -3,6 +3,7 @@ package gir
 import (
 	"encoding/xml"
 	"fmt"
+	"log"
 
 	"github.com/dave/jennifer/jen"
 )
@@ -15,6 +16,16 @@ type Method struct {
 }
 
 func (m Method) GenFunc(parentType string) *jen.Statement {
+	stmt := m.genFunc(parentType)
+	if stmt == nil {
+		log.Printf("skipping function %s.%s", parentType, m.GoName())
+		return &jen.Statement{}
+	}
+
+	return stmt
+}
+
+func (m Method) genFunc(parentType string) *jen.Statement {
 	i := firstChar(parentType)
 	p := jen.Id(i).Op("*").Id(parentType)
 
@@ -23,12 +34,28 @@ func (m Method) GenFunc(parentType string) *jen.Statement {
 		stmt.Add(m.Doc.GenGoComments(i, m.GoName()))
 	}
 
+	if m.IsDeprecated() {
+		if m.Doc != nil {
+			stmt.Comment("")
+			stmt.Line()
+		}
+		stmt.Commentf("This method is deprecated since version %s.", m.DeprecatedVersion)
+		stmt.Line()
+	}
+
 	stmt.Func().Params(p).Id(m.GoName())
 
 	var parm = []Parameter{}
 	if m.Parameters != nil {
 		parm = m.Parameters.Parameters
 	}
+
+	for _, param := range parm {
+		if param.IsBlockedType() {
+			return nil
+		}
+	}
+
 	var args = make(map[string]*jen.Statement, len(parm)+1)
 
 	// Generate the parameters in the function signature.
@@ -45,7 +72,10 @@ func (m Method) GenFunc(parentType string) *jen.Statement {
 		}
 	})
 
-	if m.ReturnValue != nil {
+	if m.ReturnValue != nil && m.ReturnValue.Type != nil {
+		if m.ReturnValue.Type.Map() == nil {
+			return nil
+		}
 		stmt.Add(m.ReturnValue.Type.TypeParam())
 	}
 

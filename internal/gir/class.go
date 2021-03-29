@@ -212,8 +212,6 @@ func (c Class) GenMethods() *jen.Statement {
 		stmt.Line()
 	}
 
-	// for _,
-
 	return &stmt
 }
 

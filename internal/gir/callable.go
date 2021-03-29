@@ -11,6 +11,9 @@ type CallableAttrs struct {
 	CType       string `xml:"http://www.gtk.org/introspection/c/1.0 type,attr"`
 	CIdentifier string `xml:"http://www.gtk.org/introspection/c/1.0 identifier,attr"`
 
+	Deprecated        int    `xml:"deprecated,attr"`
+	DeprecatedVersion string `xml:"deprecated-version,attr"`
+
 	Parameters  *Parameters
 	ReturnValue *ReturnValue `xml:"http://www.gtk.org/introspection/core/1.0 return-value"`
 	Doc         *Doc
@@ -43,6 +46,11 @@ func (c CallableAttrs) HasArrayParameter() bool {
 	}
 
 	return c.ReturnValue.Array != nil
+}
+
+// IsDeprecated returns true if the current object is deprecated.
+func (c CallableAttrs) IsDeprecated() bool {
+	return c.Deprecated == 1
 }
 
 // IsVariadic returns true if the current function is variadic.
@@ -188,7 +196,7 @@ func (p ParameterAttrs) IsDestroyNotifyFunc() bool {
 
 // IsBlockedType returns true if the parameter has a blocked type.
 func (p ParameterAttrs) IsBlockedType() bool {
-	return p.Type.Type() == nil
+	return p.Type.Map() == nil
 }
 
 // GenValueCall generates a value conversion call from the given names. If

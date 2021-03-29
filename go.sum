@@ -4,6 +4,8 @@ github.com/diamondburned/gotk3 v0.0.0-20201229054305-848200601f20 h1:/jSna2cSHrN
 github.com/diamondburned/gotk3 v0.0.0-20201229054305-848200601f20/go.mod h1:/hqFpkNa9T3JgNAE2fLvCdov7c5bw//FHNZrZ3Uv9/Q=
 github.com/gotk3/gotk3 v0.5.3-0.20210311170413-be85685ca6db h1:6DrB5/BH3GK8Wg6VZ+C2NqQQdMof0iHifNqxixBKefk=
 github.com/gotk3/gotk3 v0.5.3-0.20210311170413-be85685ca6db/go.mod h1:/hqFpkNa9T3JgNAE2fLvCdov7c5bw//FHNZrZ3Uv9/Q=
+github.com/gotk3/gotk3 v0.5.3-0.20210326060404-6328e5470ece h1:97BTiWMRSBA/fkg4irBHzQPv8E30dIUThuAtQn/MK6Q=
+github.com/gotk3/gotk3 v0.5.3-0.20210326060404-6328e5470ece/go.mod h1:/hqFpkNa9T3JgNAE2fLvCdov7c5bw//FHNZrZ3Uv9/Q=
 github.com/mitchellh/go-wordwrap v1.0.0 h1:6GlHJ/LTGMrIJbwgdqdl2eEH8o+Exx/0m8ir9Gns0u4=
 github.com/mitchellh/go-wordwrap v1.0.0/go.mod h1:ZXFpozHsX6DPmq2I0TCekCxypsnAUbP2oI0UX1GXzOo=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

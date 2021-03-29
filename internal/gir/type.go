@@ -87,7 +87,7 @@ func TypeMap(typeName string) *jen.Statement {
 func (t Type) Map() *jen.Statement {
 	switch t.Name {
 	case "void", "none":
-		return nil
+		return &jen.Statement{}
 	case "gboolean":
 		return jen.Bool()
 	case "gfloat":
@@ -135,9 +135,11 @@ func (t Type) Map() *jen.Statement {
 		return jen.Uintptr()
 
 	// We don't know what these types translates to.
-	case "GObject.EnumValue":
-		return nil // TODO: Find a way to map EnumValue type.
-	case "Gtk.Buildable":
+	case
+		// TODO: Find a way to map EnumValue type.
+		"GObject.EnumValue",
+		"Gtk.Buildable", "Gtk.TargetList",
+		"Gio.LoadableIcon", "Gio.Cancellable", "Gio.AsyncResult":
 		return nil
 	}
 
@@ -351,6 +353,7 @@ func (t Type) IsNamespaceFunc() bool {
 var knownEnums = []string{
 	"Gtk.Orientation",
 	"Gtk.IconSize",
+	"Gtk.PackType",
 	"Pango.EllipsizeMode",
 }
 

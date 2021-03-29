@@ -54,6 +54,7 @@ func NewGotk3Generator(name string) *jen.File {
 	f.ImportName("github.com/gotk3/gotk3/cairo", "cairo")
 	f.ImportName("github.com/diamondburned/handy/internal/callback", "callback")
 	f.CgoPreamble("#cgo pkg-config: libhandy-1 gtk+-3.0 glib-2.0 gio-2.0 glib-2.0 gobject-2.0")
+	f.CgoPreamble("#cgo CFLAGS: -Wno-deprecated-declarations")
 	f.CgoPreamble("#include <handy.h>")
 	f.CgoPreamble("#include <gtk/gtk.h>")
 	f.CgoPreamble("#include <gio/gio.h>")
@@ -180,6 +181,12 @@ func EmbeddedFieldNoPanic(goType string) string {
 	case "gtk.Widget":
 		return "glib.InitiallyUnowned"
 
+	case "gdk.Pixbuf":
+		fallthrough
+	case "glib.MenuModel":
+		fallthrough
+	case "glib.Icon":
+		fallthrough
 	case "glib.InitiallyUnowned":
 		fallthrough
 	case "glib.ListModel":

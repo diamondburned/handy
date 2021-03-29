@@ -10,6 +10,7 @@ import (
 )
 
 // #cgo pkg-config: libhandy-1 gtk+-3.0 glib-2.0 gio-2.0 glib-2.0 gobject-2.0
+// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <handy.h>
 // #include <gtk/gtk.h>
 // #include <gio/gio.h>
@@ -50,6 +51,8 @@ func init() {
 		// Enums
 		{glib.Type(C.hdy_centering_policy_get_type()), marshalCenteringPolicy},
 		{glib.Type(C.hdy_deck_transition_type_get_type()), marshalDeckTransitionType},
+		{glib.Type(C.hdy_flap_fold_policy_get_type()), marshalFlapFoldPolicy},
+		{glib.Type(C.hdy_flap_transition_type_get_type()), marshalFlapTransitionType},
 		{glib.Type(C.hdy_header_group_child_type_get_type()), marshalHeaderGroupChildType},
 		{glib.Type(C.hdy_leaflet_transition_type_get_type()), marshalLeafletTransitionType},
 		{glib.Type(C.hdy_navigation_direction_get_type()), marshalNavigationDirection},
@@ -68,6 +71,7 @@ func init() {
 		{glib.Type(C.hdy_deck_get_type()), marshalDeck},
 		{glib.Type(C.hdy_enum_value_object_get_type()), marshalEnumValueObject},
 		{glib.Type(C.hdy_expander_row_get_type()), marshalExpanderRow},
+		{glib.Type(C.hdy_flap_get_type()), marshalFlap},
 		{glib.Type(C.hdy_header_bar_get_type()), marshalHeaderBar},
 		{glib.Type(C.hdy_header_group_get_type()), marshalHeaderGroup},
 		{glib.Type(C.hdy_header_group_child_get_type()), marshalHeaderGroupChild},
@@ -79,8 +83,12 @@ func init() {
 		{glib.Type(C.hdy_preferences_window_get_type()), marshalPreferencesWindow},
 		{glib.Type(C.hdy_search_bar_get_type()), marshalSearchBar},
 		{glib.Type(C.hdy_squeezer_get_type()), marshalSqueezer},
+		{glib.Type(C.hdy_status_page_get_type()), marshalStatusPage},
 		{glib.Type(C.hdy_swipe_group_get_type()), marshalSwipeGroup},
 		{glib.Type(C.hdy_swipe_tracker_get_type()), marshalSwipeTracker},
+		{glib.Type(C.hdy_tab_bar_get_type()), marshalTabBar},
+		{glib.Type(C.hdy_tab_page_get_type()), marshalTabPage},
+		{glib.Type(C.hdy_tab_view_get_type()), marshalTabView},
 		{glib.Type(C.hdy_title_bar_get_type()), marshalTitleBar},
 		{glib.Type(C.hdy_value_object_get_type()), marshalValueObject},
 		{glib.Type(C.hdy_view_switcher_get_type()), marshalViewSwitcher},
@@ -126,6 +134,47 @@ const (
 	// DeckTransitionTypeSlide slide from left, right, up or down according to
 	// the orientation, text direction and the children order
 	DeckTransitionTypeSlide DeckTransitionType = 2
+)
+
+// FlapFoldPolicy these enumeration values describe the possible folding
+// behavior in a Flap widget.
+type FlapFoldPolicy int
+
+func marshalFlapFoldPolicy(p uintptr) (interface{}, error) {
+	return FlapFoldPolicy(C.g_value_get_enum((*C.GValue)(unsafe.Pointer(p)))), nil
+}
+
+const (
+	// FlapFoldPolicyNever disable folding, the flap cannot reach narrow
+	// sizes.
+	FlapFoldPolicyNever FlapFoldPolicy = 0
+	// FlapFoldPolicyAlways keep the flap always folded.
+	FlapFoldPolicyAlways FlapFoldPolicy = 1
+	// FlapFoldPolicyAuto fold and unfold the flap based on available   space.
+	FlapFoldPolicyAuto FlapFoldPolicy = 2
+)
+
+// FlapTransitionType these enumeration values describe the possible transitions
+// between children in a Flap widget, as well as which areas can be swiped via
+// Flap:swipe-to-open and Flap:swipe-to-close.
+//
+// New values may be added to this enum over time.
+type FlapTransitionType int
+
+func marshalFlapTransitionType(p uintptr) (interface{}, error) {
+	return FlapTransitionType(C.g_value_get_enum((*C.GValue)(unsafe.Pointer(p)))), nil
+}
+
+const (
+	// FlapTransitionTypeOver the flap slides over the content, which is
+	// dimmed. When folded, only the flap can be swiped.
+	FlapTransitionTypeOver FlapTransitionType = 0
+	// FlapTransitionTypeUnder the content slides over the flap. Only the
+	// content can be swiped.
+	FlapTransitionTypeUnder FlapTransitionType = 1
+	// FlapTransitionTypeSlide the flap slides offscreen when hidden,   neither
+	// the flap nor content overlap each other. Both widgets can be   swiped.
+	FlapTransitionTypeSlide FlapTransitionType = 2
 )
 
 // HeaderGroupChildType enumeration value describes the child types handled by
@@ -488,6 +537,21 @@ func (a *ActionRow) GetSubtitle() string {
 	return r
 }
 
+// GetSubtitleLines gets the number of lines at the end of which the subtitle
+// label will be ellipsized. If the value is 0, the number of lines won't be
+// limited.
+func (a *ActionRow) GetSubtitleLines() int {
+	r := int(C.hdy_action_row_get_subtitle_lines(a.native()))
+	return r
+}
+
+// GetTitleLines gets the number of lines at the end of which the title label
+// will be ellipsized. If the value is 0, the number of lines won't be limited.
+func (a *ActionRow) GetTitleLines() int {
+	r := int(C.hdy_action_row_get_title_lines(a.native()))
+	return r
+}
+
 // GetUseUnderline gets whether an embedded underline in the text of the title
 // and subtitle labels indicates a mnemonic. See (*ActionRow).SetUseUnderline().
 func (a *ActionRow) GetUseUnderline() bool {
@@ -519,6 +583,21 @@ func (a *ActionRow) SetSubtitle(subtitle string) {
 	v1 := C.CString(subtitle)
 	defer C.free(unsafe.Pointer(v1))
 	C.hdy_action_row_set_subtitle(a.native(), v1)
+}
+
+// SetSubtitleLines sets the number of lines at the end of which the subtitle
+// label will be ellipsized. If the value is 0, the number of lines won't be
+// limited.
+func (a *ActionRow) SetSubtitleLines(subtitleLines int) {
+	v1 := C.gint(subtitleLines)
+	C.hdy_action_row_set_subtitle_lines(a.native(), v1)
+}
+
+// SetTitleLines sets the number of lines at the end of which the title label
+// will be ellipsized. If the value is 0, the number of lines won't be limited.
+func (a *ActionRow) SetTitleLines(titleLines int) {
+	v1 := C.gint(titleLines)
+	C.hdy_action_row_set_title_lines(a.native(), v1)
 }
 
 // SetUseUnderline if true, an underline in the text of the title and subtitle
@@ -610,6 +689,19 @@ func (a *Avatar) native() *C.HdyAvatar {
 	return (*C.HdyAvatar)(gwidget(&a.DrawingArea))
 }
 
+// DrawToPixbuf renders a into a pixbuf at size and scale_factor. This can be
+// used to export the fallback avatar.
+func (a *Avatar) DrawToPixbuf(size int, scaleFactor int) *gdk.Pixbuf {
+	v1 := C.gint(size)
+	v2 := C.gint(scaleFactor)
+
+	obj := glib.Take(unsafe.Pointer(C.hdy_avatar_draw_to_pixbuf(a.native(), v1, v2)))
+	r := &gdk.Pixbuf{
+		Object: obj,
+	}
+	return r
+}
+
 // GetIconName gets the name of the icon in the icon theme to use when the icon
 // should be displayed.
 func (a *Avatar) GetIconName() string {
@@ -649,6 +741,8 @@ func (a *Avatar) SetIconName(iconName string) {
 
 // SetImageLoadFunc a callback which is called when the custom image need to be
 // reloaded for some reason (e.g. scale-factor changes).
+//
+// This method is deprecated since version 1.2.
 func (a *Avatar) SetImageLoadFunc(loadImage AvatarImageLoadFunc) {
 	v1 := (*[0]byte)(C.callbackAvatarImageLoadFunc)
 
@@ -721,6 +815,13 @@ func CarouselNew() *Carousel {
 // native turns the current *Carousel into the native C pointer type.
 func (c *Carousel) native() *C.HdyCarousel {
 	return (*C.HdyCarousel)(gwidget(&c.EventBox))
+}
+
+// GetAllowLongSwipes whether to allow swiping for more than one page at a time.
+// If the value is false, each swipe can only move to the adjacent pages.
+func (c *Carousel) GetAllowLongSwipes() bool {
+	r := gobool(C.hdy_carousel_get_allow_long_swipes(c.native()))
+	return r
 }
 
 // GetAllowMouseDrag sets whether c can be dragged with mouse pointer
@@ -809,6 +910,13 @@ func (c *Carousel) ScrollToFull(widget gtk.IWidget, duration int64) {
 	v2 := C.gint64(duration)
 
 	C.hdy_carousel_scroll_to_full(c.native(), v1, v2)
+}
+
+// SetAllowLongSwipes sets whether to allow swiping for more than one page at a
+// time. If the value is false, each swipe can only move to the adjacent pages.
+func (c *Carousel) SetAllowLongSwipes(allowLongSwipes bool) {
+	v1 := cbool(allowLongSwipes)
+	C.hdy_carousel_set_allow_long_swipes(c.native(), v1)
 }
 
 // SetAllowMouseDrag sets whether c can be dragged with mouse pointer. If
@@ -1283,12 +1391,36 @@ func (d *Deck) GetVisibleChildName() string {
 	return r
 }
 
+// InsertChildAfter inserts child in the position after sibling in the list of
+// children. If sibling is nil, insert child at the first position.
+func (d *Deck) InsertChildAfter(child gtk.IWidget, sibling gtk.IWidget) {
+	v1 := cwidget(child)
+	v2 := cwidget(sibling)
+
+	C.hdy_deck_insert_child_after(d.native(), v1, v2)
+}
+
 // Navigate switches to the previous or next child, similar to performing a
 // swipe gesture to go in direction.
 func (d *Deck) Navigate(direction NavigationDirection) bool {
 	v1 := C.HdyNavigationDirection(direction)
 	r := gobool(C.hdy_deck_navigate(d.native(), v1))
 	return r
+}
+
+// Prepend inserts child at the first position in d.
+func (d *Deck) Prepend(child gtk.IWidget) {
+	v1 := cwidget(child)
+	C.hdy_deck_prepend(d.native(), v1)
+}
+
+// ReorderChildAfter moves child to the position after sibling in the list of
+// children. If sibling is nil, move child to the first position.
+func (d *Deck) ReorderChildAfter(child gtk.IWidget, sibling gtk.IWidget) {
+	v1 := cwidget(child)
+	v2 := cwidget(sibling)
+
+	C.hdy_deck_reorder_child_after(d.native(), v1, v2)
 }
 
 // SetCanSwipeBack sets whether or not d allows switching to the previous child
@@ -1524,6 +1656,257 @@ func (e *ExpanderRow) SetSubtitle(subtitle string) {
 func (e *ExpanderRow) SetUseUnderline(useUnderline bool) {
 	v1 := cbool(useUnderline)
 	C.hdy_expander_row_set_use_underline(e.native(), v1)
+}
+
+type Flap struct {
+	gtk.Container
+
+	// Interfaces
+	gtk.Orientable
+	Swiper
+}
+
+// wrapFlap wraps the given pointer to *Flap.
+func wrapFlap(ptr unsafe.Pointer) *Flap {
+	obj := glib.Take(ptr)
+	return &Flap{
+		Container: gtk.Container{
+			Widget: gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
+			},
+		},
+		Orientable: gtk.Orientable{obj},
+		Swiper: &Swipeable{
+			Caster: &gtk.Widget{
+				InitiallyUnowned: glib.InitiallyUnowned{
+					Object: obj,
+				},
+			},
+		},
+	}
+}
+
+func marshalFlap(p uintptr) (interface{}, error) {
+	return wrapFlap(unsafe.Pointer(C.g_value_get_object((*C.GValue)(unsafe.Pointer(p))))), nil
+}
+
+// FlapNew creates a new Flap.
+func FlapNew() *Flap {
+	return wrapFlap(unsafe.Pointer(C.hdy_flap_new()))
+}
+
+// native turns the current *Flap into the native C pointer type.
+func (f *Flap) native() *C.HdyFlap {
+	return (*C.HdyFlap)(gwidget(&f.Container))
+}
+
+// GetContent gets the content widget for f
+func (f *Flap) GetContent() gtk.IWidget {
+	r, err := castWidget(C.hdy_flap_get_content(f.native()))
+	if err != nil {
+		panic("cast widget *C.GtkWidget failed: " + err.Error())
+	}
+	return r
+}
+
+// GetFlap gets the flap widget for f
+func (f *Flap) GetFlap() gtk.IWidget {
+	r, err := castWidget(C.hdy_flap_get_flap(f.native()))
+	if err != nil {
+		panic("cast widget *C.GtkWidget failed: " + err.Error())
+	}
+	return r
+}
+
+// GetFlapPosition gets the flap position for f.
+func (f *Flap) GetFlapPosition() gtk.PackType {
+	r := gtk.PackType(C.hdy_flap_get_flap_position(f.native()))
+	return r
+}
+
+// GetFoldDuration returns the amount of time (in milliseconds) that fold
+// transitions in f will take.
+func (f *Flap) GetFoldDuration() uint {
+	r := uint(C.hdy_flap_get_fold_duration(f.native()))
+	return r
+}
+
+// GetFoldPolicy gets the current fold policy of f. See (*Flap).SetFoldPolicy().
+func (f *Flap) GetFoldPolicy() FlapFoldPolicy {
+	r := FlapFoldPolicy(C.hdy_flap_get_fold_policy(f.native()))
+	return r
+}
+
+// GetFolded gets whether f is currently folded.
+//
+// See Flap:fold-policy.
+func (f *Flap) GetFolded() bool {
+	r := gobool(C.hdy_flap_get_folded(f.native()))
+	return r
+}
+
+// GetLocked gets whether f is locked.
+func (f *Flap) GetLocked() bool {
+	r := gobool(C.hdy_flap_get_locked(f.native()))
+	return r
+}
+
+// GetModal gets whether the f is modal. See (*Flap).SetModal().
+func (f *Flap) GetModal() bool {
+	r := gobool(C.hdy_flap_get_modal(f.native()))
+	return r
+}
+
+// GetRevealDuration returns the amount of time (in milliseconds) that reveal
+// transitions in f will take.
+func (f *Flap) GetRevealDuration() uint {
+	r := uint(C.hdy_flap_get_reveal_duration(f.native()))
+	return r
+}
+
+// GetRevealFlap gets whether the flap widget is revealed for f.
+func (f *Flap) GetRevealFlap() bool {
+	r := gobool(C.hdy_flap_get_reveal_flap(f.native()))
+	return r
+}
+
+// GetRevealProgress gets the current reveal transition progress for f. 0 means
+// fully hidden, 1 means fully revealed. See Flap:reveal-flap.
+func (f *Flap) GetRevealProgress() float64 {
+	r := float64(C.hdy_flap_get_reveal_progress(f.native()))
+	return r
+}
+
+// GetSeparator gets the separator widget for f.
+func (f *Flap) GetSeparator() gtk.IWidget {
+	r, err := castWidget(C.hdy_flap_get_separator(f.native()))
+	if err != nil {
+		panic("cast widget *C.GtkWidget failed: " + err.Error())
+	}
+	return r
+}
+
+// GetSwipeToClose gets whether f can be closed with a swipe gesture.
+func (f *Flap) GetSwipeToClose() bool {
+	r := gobool(C.hdy_flap_get_swipe_to_close(f.native()))
+	return r
+}
+
+// GetSwipeToOpen gets whether f can be opened with a swipe gesture.
+func (f *Flap) GetSwipeToOpen() bool {
+	r := gobool(C.hdy_flap_get_swipe_to_open(f.native()))
+	return r
+}
+
+// GetTransitionType gets the type of animation that will be used for reveal and
+// fold transitions in f.
+func (f *Flap) GetTransitionType() FlapTransitionType {
+	r := FlapTransitionType(C.hdy_flap_get_transition_type(f.native()))
+	return r
+}
+
+// SetContent sets the content widget for f, always displayed when unfolded, and
+// partially visible when folded.
+func (f *Flap) SetContent(content gtk.IWidget) {
+	v1 := cwidget(content)
+	C.hdy_flap_set_content(f.native(), v1)
+}
+
+// SetFlap sets the flap widget for f, only visible when Flap:reveal-progress is
+// greater than 0.
+func (f *Flap) SetFlap(flap gtk.IWidget) {
+	v1 := cwidget(flap)
+	C.hdy_flap_set_flap(f.native(), v1)
+}
+
+// SetFlapPosition sets the flap position for f. If GTK_PACK_START, the flap is
+// displayed before the content, if GTK_PACK_END, it's displayed after the
+// content.
+func (f *Flap) SetFlapPosition(position gtk.PackType) {
+	v1 := C.GtkPackType(position)
+	C.hdy_flap_set_flap_position(f.native(), v1)
+}
+
+// SetFoldDuration sets the duration that fold transitions in f will take.
+func (f *Flap) SetFoldDuration(duration uint) {
+	v1 := C.guint(duration)
+	C.hdy_flap_set_fold_duration(f.native(), v1)
+}
+
+// SetFoldPolicy sets the current fold policy for f. See FlapFoldPolicy for
+// available policies.
+func (f *Flap) SetFoldPolicy(policy FlapFoldPolicy) {
+	v1 := C.HdyFlapFoldPolicy(policy)
+	C.hdy_flap_set_fold_policy(f.native(), v1)
+}
+
+// SetLocked sets whether f is locked.
+//
+// If false, folding f when the flap is revealed automatically closes it, and
+// unfolding it when the flap is not revealed opens it. If true,
+// Flap:reveal-flap value never changes on its own.
+func (f *Flap) SetLocked(locked bool) {
+	v1 := cbool(locked)
+	C.hdy_flap_set_locked(f.native(), v1)
+}
+
+// SetModal sets whether the f can be closed with a click.
+//
+// If modal is true, clicking the content widget while flap is revealed, or
+// pressing Escape key, will close the flap. If false, clicks are passed through
+// to the content widget.
+func (f *Flap) SetModal(modal bool) {
+	v1 := cbool(modal)
+	C.hdy_flap_set_modal(f.native(), v1)
+}
+
+// SetRevealDuration sets the duration that reveal transitions in f will take.
+func (f *Flap) SetRevealDuration(duration uint) {
+	v1 := C.guint(duration)
+	C.hdy_flap_set_reveal_duration(f.native(), v1)
+}
+
+// SetRevealFlap sets whether the flap widget is revealed for f.
+func (f *Flap) SetRevealFlap(revealFlap bool) {
+	v1 := cbool(revealFlap)
+	C.hdy_flap_set_reveal_flap(f.native(), v1)
+}
+
+// SetSeparator sets the separator widget for f, displayed between content and
+// flap when there's no shadow to display. When exactly it's visible depends on
+// the Flap:transition-type value. If nil, no separator will be used.
+func (f *Flap) SetSeparator(separator gtk.IWidget) {
+	v1 := cwidget(separator)
+	C.hdy_flap_set_separator(f.native(), v1)
+}
+
+// SetSwipeToClose sets whether f can be closed with a swipe gesture.
+//
+// The area that can be swiped depends on the Flap:transition-type value.
+func (f *Flap) SetSwipeToClose(swipeToClose bool) {
+	v1 := cbool(swipeToClose)
+	C.hdy_flap_set_swipe_to_close(f.native(), v1)
+}
+
+// SetSwipeToOpen sets whether f can be opened with a swipe gesture.
+//
+// The area that can be swiped depends on the Flap:transition-type value.
+func (f *Flap) SetSwipeToOpen(swipeToOpen bool) {
+	v1 := cbool(swipeToOpen)
+	C.hdy_flap_set_swipe_to_open(f.native(), v1)
+}
+
+// SetTransitionType sets the type of animation that will be used for reveal and
+// fold transitions in f.
+//
+// Flap:flap is transparent by default, which means the content will be seen
+// through it with HDY_FLAP_TRANSITION_TYPE_OVER transitions; add the
+// .background style class to it if this is unwanted.
+func (f *Flap) SetTransitionType(transitionType FlapTransitionType) {
+	v1 := C.HdyFlapTransitionType(transitionType)
+	C.hdy_flap_set_transition_type(f.native(), v1)
 }
 
 type HeaderBar struct {
@@ -2180,6 +2563,15 @@ func (l *Leaflet) GetVisibleChildName() string {
 	return r
 }
 
+// InsertChildAfter inserts child in the position after sibling in the list of
+// children. If sibling is nil, insert child at the first position.
+func (l *Leaflet) InsertChildAfter(child gtk.IWidget, sibling gtk.IWidget) {
+	v1 := cwidget(child)
+	v2 := cwidget(sibling)
+
+	C.hdy_leaflet_insert_child_after(l.native(), v1, v2)
+}
+
 // Navigate switches to the previous or next child that doesn't have
 // 'navigatable' child property set to false, similar to performing a swipe
 // gesture to go in direction.
@@ -2187,6 +2579,21 @@ func (l *Leaflet) Navigate(direction NavigationDirection) bool {
 	v1 := C.HdyNavigationDirection(direction)
 	r := gobool(C.hdy_leaflet_navigate(l.native(), v1))
 	return r
+}
+
+// Prepend inserts child at the first position in l.
+func (l *Leaflet) Prepend(child gtk.IWidget) {
+	v1 := cwidget(child)
+	C.hdy_leaflet_prepend(l.native(), v1)
+}
+
+// ReorderChildAfter moves child to the position after sibling in the list of
+// children. If sibling is nil, move child to the first position.
+func (l *Leaflet) ReorderChildAfter(child gtk.IWidget, sibling gtk.IWidget) {
+	v1 := cwidget(child)
+	v2 := cwidget(sibling)
+
+	C.hdy_leaflet_reorder_child_after(l.native(), v1, v2)
 }
 
 // SetCanSwipeBack sets whether or not l allows switching to the previous child
@@ -2815,6 +3222,79 @@ func (s *Squeezer) SetYAlign(yalign float32) {
 	C.hdy_squeezer_set_yalign(s.native(), v1)
 }
 
+type StatusPage struct {
+	gtk.Bin
+}
+
+// wrapStatusPage wraps the given pointer to *StatusPage.
+func wrapStatusPage(ptr unsafe.Pointer) *StatusPage {
+	obj := glib.Take(ptr)
+	return &StatusPage{
+		Bin: gtk.Bin{
+			Container: gtk.Container{
+				Widget: gtk.Widget{
+					InitiallyUnowned: glib.InitiallyUnowned{
+						Object: obj,
+					},
+				},
+			},
+		},
+	}
+}
+
+func marshalStatusPage(p uintptr) (interface{}, error) {
+	return wrapStatusPage(unsafe.Pointer(C.g_value_get_object((*C.GValue)(unsafe.Pointer(p))))), nil
+}
+
+// StatusPageNew creates a new StatusPage.
+func StatusPageNew() *StatusPage {
+	return wrapStatusPage(unsafe.Pointer(C.hdy_status_page_new()))
+}
+
+// native turns the current *StatusPage into the native C pointer type.
+func (s *StatusPage) native() *C.HdyStatusPage {
+	return (*C.HdyStatusPage)(gwidget(&s.Bin))
+}
+
+// GetDescription gets the description for s.
+func (s *StatusPage) GetDescription() string {
+	r := C.GoString(C.hdy_status_page_get_description(s.native()))
+	return r
+}
+
+// GetIconName gets the icon name for s.
+func (s *StatusPage) GetIconName() string {
+	r := C.GoString(C.hdy_status_page_get_icon_name(s.native()))
+	return r
+}
+
+// GetTitle gets the title for s.
+func (s *StatusPage) GetTitle() string {
+	r := C.GoString(C.hdy_status_page_get_title(s.native()))
+	return r
+}
+
+// SetDescription sets the description for s.
+func (s *StatusPage) SetDescription(description string) {
+	v1 := C.CString(description)
+	defer C.free(unsafe.Pointer(v1))
+	C.hdy_status_page_set_description(s.native(), v1)
+}
+
+// SetIconName sets the icon name for s.
+func (s *StatusPage) SetIconName(iconName string) {
+	v1 := C.CString(iconName)
+	defer C.free(unsafe.Pointer(v1))
+	C.hdy_status_page_set_icon_name(s.native(), v1)
+}
+
+// SetTitle sets the title for s.
+func (s *StatusPage) SetTitle(title string) {
+	v1 := C.CString(title)
+	defer C.free(unsafe.Pointer(v1))
+	C.hdy_status_page_set_title(s.native(), v1)
+}
+
 type SwipeGroup struct {
 	*glib.Object
 }
@@ -2891,6 +3371,14 @@ func (s *SwipeTracker) native() *C.HdySwipeTracker {
 	return (*C.HdySwipeTracker)(unsafe.Pointer(s.Native()))
 }
 
+// GetAllowLongSwipes whether to allow swiping for more than one snap point at a
+// time. If the value is false, each swipe can only move to the adjacent snap
+// points.
+func (s *SwipeTracker) GetAllowLongSwipes() bool {
+	r := gobool(C.hdy_swipe_tracker_get_allow_long_swipes(s.native()))
+	return r
+}
+
 // GetAllowMouseDrag get whether s can be dragged with mouse pointer.
 func (s *SwipeTracker) GetAllowMouseDrag() bool {
 	r := gobool(C.hdy_swipe_tracker_get_allow_mouse_drag(s.native()))
@@ -2923,6 +3411,14 @@ func (s *SwipeTracker) GetSwipeable() Swiper {
 	return r
 }
 
+// SetAllowLongSwipes sets whether to allow swiping for more than one snap point
+// at a time. If the value is false, each swipe can only move to the adjacent
+// snap points.
+func (s *SwipeTracker) SetAllowLongSwipes(allowLongSwipes bool) {
+	v1 := cbool(allowLongSwipes)
+	C.hdy_swipe_tracker_set_allow_long_swipes(s.native(), v1)
+}
+
 // SetAllowMouseDrag set whether s can be dragged with mouse pointer. This
 // should usually be false.
 func (s *SwipeTracker) SetAllowMouseDrag(allowMouseDrag bool) {
@@ -2949,6 +3445,721 @@ func (s *SwipeTracker) SetReversed(reversed bool) {
 func (s *SwipeTracker) ShiftPosition(delta float64) {
 	v1 := C.gdouble(delta)
 	C.hdy_swipe_tracker_shift_position(s.native(), v1)
+}
+
+type TabBar struct {
+	gtk.Bin
+}
+
+// wrapTabBar wraps the given pointer to *TabBar.
+func wrapTabBar(ptr unsafe.Pointer) *TabBar {
+	obj := glib.Take(ptr)
+	return &TabBar{
+		Bin: gtk.Bin{
+			Container: gtk.Container{
+				Widget: gtk.Widget{
+					InitiallyUnowned: glib.InitiallyUnowned{
+						Object: obj,
+					},
+				},
+			},
+		},
+	}
+}
+
+func marshalTabBar(p uintptr) (interface{}, error) {
+	return wrapTabBar(unsafe.Pointer(C.g_value_get_object((*C.GValue)(unsafe.Pointer(p))))), nil
+}
+
+// TabBarNew creates a new TabBar widget.
+func TabBarNew() *TabBar {
+	return wrapTabBar(unsafe.Pointer(C.hdy_tab_bar_new()))
+}
+
+// native turns the current *TabBar into the native C pointer type.
+func (t *TabBar) native() *C.HdyTabBar {
+	return (*C.HdyTabBar)(gwidget(&t.Bin))
+}
+
+// GetAutohide gets whether the tabs automatically hide, see
+// (*TabBar).SetAutohide().
+func (t *TabBar) GetAutohide() bool {
+	r := gobool(C.hdy_tab_bar_get_autohide(t.native()))
+	return r
+}
+
+// GetEndActionWidget gets the widget shown after the tabs.
+func (t *TabBar) GetEndActionWidget() gtk.IWidget {
+	r, err := castWidget(C.hdy_tab_bar_get_end_action_widget(t.native()))
+	if err != nil {
+		panic("cast widget *C.GtkWidget failed: " + err.Error())
+	}
+	return r
+}
+
+// GetExpandTabs gets whether tabs should expand, see (*TabBar).SetExpandTabs().
+func (t *TabBar) GetExpandTabs() bool {
+	r := gobool(C.hdy_tab_bar_get_expand_tabs(t.native()))
+	return r
+}
+
+// GetInverted gets whether tabs use inverted layout, see
+// (*TabBar).SetInverted().
+func (t *TabBar) GetInverted() bool {
+	r := gobool(C.hdy_tab_bar_get_inverted(t.native()))
+	return r
+}
+
+// GetIsOverflowing gets whether t is overflowing.
+func (t *TabBar) GetIsOverflowing() bool {
+	r := gobool(C.hdy_tab_bar_get_is_overflowing(t.native()))
+	return r
+}
+
+// GetStartActionWidget gets the widget shown before the tabs.
+func (t *TabBar) GetStartActionWidget() gtk.IWidget {
+	r, err := castWidget(C.hdy_tab_bar_get_start_action_widget(t.native()))
+	if err != nil {
+		panic("cast widget *C.GtkWidget failed: " + err.Error())
+	}
+	return r
+}
+
+// GetTabsRevealed gets the value of the TabBar:tabs-revealed property.
+func (t *TabBar) GetTabsRevealed() bool {
+	r := gobool(C.hdy_tab_bar_get_tabs_revealed(t.native()))
+	return r
+}
+
+// GetView gets the TabView t controls.
+func (t *TabBar) GetView() *TabView {
+	r := wrapTabView(unsafe.Pointer(C.hdy_tab_bar_get_view(t.native())))
+	return r
+}
+
+// SetAutohide sets whether the tabs automatically hide.
+//
+// If autohide is true, the tab bar disappears when the associated TabView has 0
+// or 1 tab, no pinned tabs, and no tab is being transferred.
+//
+// Autohide is enabled by default.
+//
+// See TabBar:tabs-revealed.
+func (t *TabBar) SetAutohide(autohide bool) {
+	v1 := cbool(autohide)
+	C.hdy_tab_bar_set_autohide(t.native(), v1)
+}
+
+// SetEndActionWidget sets the widget to show after the tabs.
+func (t *TabBar) SetEndActionWidget(widget gtk.IWidget) {
+	v1 := cwidget(widget)
+	C.hdy_tab_bar_set_end_action_widget(t.native(), v1)
+}
+
+// SetExpandTabs sets whether tabs should expand.
+//
+// If expand_tabs is true, the tabs will always vary width filling the whole
+// width when possible, otherwise tabs will always have the minimum possible
+// size.
+//
+// Expand is enabled by default.
+func (t *TabBar) SetExpandTabs(expandTabs bool) {
+	v1 := cbool(expandTabs)
+	C.hdy_tab_bar_set_expand_tabs(t.native(), v1)
+}
+
+// SetInverted sets whether tabs tabs use inverted layout.
+//
+// If inverted is true, non-pinned tabs will have the close button at the
+// beginning and the indicator at the end rather than the opposite.
+func (t *TabBar) SetInverted(inverted bool) {
+	v1 := cbool(inverted)
+	C.hdy_tab_bar_set_inverted(t.native(), v1)
+}
+
+// SetStartActionWidget sets the widget to show before the tabs.
+func (t *TabBar) SetStartActionWidget(widget gtk.IWidget) {
+	v1 := cwidget(widget)
+	C.hdy_tab_bar_set_start_action_widget(t.native(), v1)
+}
+
+// SetView sets the TabView t controls.
+func (t *TabBar) SetView(view *TabView) {
+	v1 := (*C.HdyTabView)(unsafe.Pointer(view.Widget.Native()))
+	C.hdy_tab_bar_set_view(t.native(), v1)
+}
+
+type TabPage struct {
+	*glib.Object
+}
+
+// wrapTabPage wraps the given pointer to *TabPage.
+func wrapTabPage(ptr unsafe.Pointer) *TabPage {
+	obj := glib.Take(ptr)
+	return &TabPage{
+		Object: obj,
+	}
+}
+
+func marshalTabPage(p uintptr) (interface{}, error) {
+	return wrapTabPage(unsafe.Pointer(C.g_value_get_object((*C.GValue)(unsafe.Pointer(p))))), nil
+}
+
+// native turns the current *TabPage into the native C pointer type.
+func (t *TabPage) native() *C.HdyTabPage {
+	return (*C.HdyTabPage)(unsafe.Pointer(t.Native()))
+}
+
+// GetChild gets the child of t.
+func (t *TabPage) GetChild() gtk.IWidget {
+	r, err := castWidget(C.hdy_tab_page_get_child(t.native()))
+	if err != nil {
+		panic("cast widget *C.GtkWidget failed: " + err.Error())
+	}
+	return r
+}
+
+// GetIcon gets the icon of t, see (*TabPage).SetIcon().
+func (t *TabPage) GetIcon() *glib.Icon {
+	obj := glib.Take(unsafe.Pointer(C.hdy_tab_page_get_icon(t.native())))
+	r := &glib.Icon{
+		Object: obj,
+	}
+	return r
+}
+
+// GetIndicatorActivatable gets whether the indicator of t is activatable, see
+// (*TabPage).SetIndicatorActivatable().
+func (t *TabPage) GetIndicatorActivatable() bool {
+	r := gobool(C.hdy_tab_page_get_indicator_activatable(t.native()))
+	return r
+}
+
+// GetIndicatorIcon gets the indicator icon of t, see
+// (*TabPage).SetIndicatorIcon().
+func (t *TabPage) GetIndicatorIcon() *glib.Icon {
+	obj := glib.Take(unsafe.Pointer(C.hdy_tab_page_get_indicator_icon(t.native())))
+	r := &glib.Icon{
+		Object: obj,
+	}
+	return r
+}
+
+// GetLoading gets whether t is loading, see (*TabPage).SetLoading().
+func (t *TabPage) GetLoading() bool {
+	r := gobool(C.hdy_tab_page_get_loading(t.native()))
+	return r
+}
+
+// GetNeedsAttention gets whether t needs attention, see
+// (*TabPage).SetNeedsAttention().
+func (t *TabPage) GetNeedsAttention() bool {
+	r := gobool(C.hdy_tab_page_get_needs_attention(t.native()))
+	return r
+}
+
+// GetParent gets the parent page of t, or nil if the t does not have a parent.
+//
+// See (*TabView).AddPage() and (*TabView).ClosePage().
+func (t *TabPage) GetParent() *TabPage {
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_page_get_parent(t.native())))
+	return r
+}
+
+// GetPinned gets whether t is pinned. See (*TabView).SetPagePinned().
+func (t *TabPage) GetPinned() bool {
+	r := gobool(C.hdy_tab_page_get_pinned(t.native()))
+	return r
+}
+
+// GetSelected gets whether t is selected. See (*TabView).SetSelectedPage().
+func (t *TabPage) GetSelected() bool {
+	r := gobool(C.hdy_tab_page_get_selected(t.native()))
+	return r
+}
+
+// GetTitle gets the title of t, see (*TabPage).SetTitle().
+func (t *TabPage) GetTitle() string {
+	r := C.GoString(C.hdy_tab_page_get_title(t.native()))
+	return r
+}
+
+// GetTooltip gets the tooltip of t, see (*TabPage).SetTooltip().
+func (t *TabPage) GetTooltip() string {
+	r := C.GoString(C.hdy_tab_page_get_tooltip(t.native()))
+	return r
+}
+
+// SetIcon sets the icon of t, displayed next to the title.
+//
+// TabBar will not show the icon if TabPage:loading is set to true, or if t is
+// pinned and TabPage:indicator-icon is set.
+func (t *TabPage) SetIcon(icon *glib.Icon) {
+	v1 := (*C.GIcon)(unsafe.Pointer(icon.Native()))
+	C.hdy_tab_page_set_icon(t.native(), v1)
+}
+
+// SetIndicatorActivatable sets whether the indicator of t is activatable.
+//
+// If set to true, TabView::indicator-activated will be emitted when the
+// indicator is clicked.
+//
+// If TabPage:indicator-icon is not set, does nothing.
+func (t *TabPage) SetIndicatorActivatable(activatable bool) {
+	v1 := cbool(activatable)
+	C.hdy_tab_page_set_indicator_activatable(t.native(), v1)
+}
+
+// SetIndicatorIcon sets the indicator icon of t.
+//
+// A common use case is an audio or camera indicator in a web browser.
+//
+// TabPage will show it at the beginning of the tab, alongside icon representing
+// TabPage:icon or loading spinner.
+//
+// If the page is pinned, the indicator will be shown instead of icon or
+// spinner.
+//
+// If TabPage:indicator-activatable is set to true, indicator icon can act as a
+// button.
+func (t *TabPage) SetIndicatorIcon(indicatorIcon *glib.Icon) {
+	v1 := (*C.GIcon)(unsafe.Pointer(indicatorIcon.Native()))
+	C.hdy_tab_page_set_indicator_icon(t.native(), v1)
+}
+
+// SetLoading sets wether t is loading.
+//
+// If set to true, TabBar will display a spinner in place of icon.
+//
+// If t is pinned and TabPage:indicator-icon is set, the loading status will not
+// be visible.
+func (t *TabPage) SetLoading(loading bool) {
+	v1 := cbool(loading)
+	C.hdy_tab_page_set_loading(t.native(), v1)
+}
+
+// SetNeedsAttention sets whether t needs attention.
+//
+// TabBar will display a glow under the tab representing t if set to true. If
+// the tab is not visible, the corresponding edge of the tab bar will be
+// highlighted.
+func (t *TabPage) SetNeedsAttention(needsAttention bool) {
+	v1 := cbool(needsAttention)
+	C.hdy_tab_page_set_needs_attention(t.native(), v1)
+}
+
+// SetTitle sets the title of t.
+//
+// TabBar will display it in the center of the tab representing t unless it's
+// pinned, and will use it as a tooltip unless TabPage:tooltip is set.
+func (t *TabPage) SetTitle(title string) {
+	v1 := C.CString(title)
+	defer C.free(unsafe.Pointer(v1))
+	C.hdy_tab_page_set_title(t.native(), v1)
+}
+
+// SetTooltip sets the tooltip of t, marked up with the Pango text markup
+// language.
+//
+// If not set, TabBar will use TabPage:title as a tooltip instead.
+func (t *TabPage) SetTooltip(tooltip string) {
+	v1 := C.CString(tooltip)
+	defer C.free(unsafe.Pointer(v1))
+	C.hdy_tab_page_set_tooltip(t.native(), v1)
+}
+
+type TabView struct {
+	gtk.Bin
+}
+
+// wrapTabView wraps the given pointer to *TabView.
+func wrapTabView(ptr unsafe.Pointer) *TabView {
+	obj := glib.Take(ptr)
+	return &TabView{
+		Bin: gtk.Bin{
+			Container: gtk.Container{
+				Widget: gtk.Widget{
+					InitiallyUnowned: glib.InitiallyUnowned{
+						Object: obj,
+					},
+				},
+			},
+		},
+	}
+}
+
+func marshalTabView(p uintptr) (interface{}, error) {
+	return wrapTabView(unsafe.Pointer(C.g_value_get_object((*C.GValue)(unsafe.Pointer(p))))), nil
+}
+
+// TabViewNew creates a new TabView widget.
+func TabViewNew() *TabView {
+	return wrapTabView(unsafe.Pointer(C.hdy_tab_view_new()))
+}
+
+// native turns the current *TabView into the native C pointer type.
+func (t *TabView) native() *C.HdyTabView {
+	return (*C.HdyTabView)(gwidget(&t.Bin))
+}
+
+// AddPage adds child to t with parent as the parent.
+//
+// This function can be used to automatically position new pages, and to select
+// the correct page when this page is closed while being selected (see
+// (*TabView).ClosePage()).
+//
+// If parent is nil, this function is equivalent to (*TabView).Append().
+func (t *TabView) AddPage(child gtk.IWidget, parent *TabPage) *TabPage {
+	v1 := cwidget(child)
+	v2 := (*C.HdyTabPage)(unsafe.Pointer(parent.Native()))
+
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_add_page(t.native(), v1, v2)))
+	return r
+}
+
+// Append inserts child as the last non-pinned page.
+func (t *TabView) Append(child gtk.IWidget) *TabPage {
+	v1 := cwidget(child)
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_append(t.native(), v1)))
+	return r
+}
+
+// AppendPinned inserts child as the last pinned page.
+func (t *TabView) AppendPinned(child gtk.IWidget) *TabPage {
+	v1 := cwidget(child)
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_append_pinned(t.native(), v1)))
+	return r
+}
+
+// CloseOtherPages requests to close all pages other than page.
+func (t *TabView) CloseOtherPages(page *TabPage) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	C.hdy_tab_view_close_other_pages(t.native(), v1)
+}
+
+// ClosePage requests to close page.
+//
+// Calling this function will result in TabView::close-page signal being emitted
+// for page. Closing the page can then be confirmed or denied via
+// (*TabView).ClosePageFinish().
+//
+// If the page is waiting for a (*TabView).ClosePageFinish() call, this function
+// will do nothing.
+//
+// The default handler for TabView::close-page will immediately confirm closing
+// the page if it's non-pinned, or reject it if it's pinned. This behavior can
+// be changed by registering your own handler for that signal.
+//
+// If page was selected, another page will be selected instead:
+//
+// If the TabPage:parent value is nil, the next page will be selected when
+// possible, or if the page was already last, the previous page will be selected
+// instead.
+//
+// If it's not nil, the previous page will be selected if it's a descendant
+// (possibly indirect) of the parent. If both the previous page and the parent
+// are pinned, the parent will be selected instead.
+func (t *TabView) ClosePage(page *TabPage) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	C.hdy_tab_view_close_page(t.native(), v1)
+}
+
+// ClosePageFinish completes a (*TabView).ClosePage() call for page.
+//
+// If confirm is true, page will be closed. If it's false, ite will be reverted
+// to its previous state and (*TabView).ClosePage() can be called for it again.
+//
+// This function should not be called unless a custom handler for
+// TabView::close-page is used.
+func (t *TabView) ClosePageFinish(page *TabPage, confirm bool) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	v2 := cbool(confirm)
+
+	C.hdy_tab_view_close_page_finish(t.native(), v1, v2)
+}
+
+// ClosePagesAfter requests to close all pages after page.
+func (t *TabView) ClosePagesAfter(page *TabPage) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	C.hdy_tab_view_close_pages_after(t.native(), v1)
+}
+
+// ClosePagesBefore requests to close all pages before page.
+func (t *TabView) ClosePagesBefore(page *TabPage) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	C.hdy_tab_view_close_pages_before(t.native(), v1)
+}
+
+// GetDefaultIcon gets default icon of t, see (*TabView).SetDefaultIcon().
+func (t *TabView) GetDefaultIcon() *glib.Icon {
+	obj := glib.Take(unsafe.Pointer(C.hdy_tab_view_get_default_icon(t.native())))
+	r := &glib.Icon{
+		Object: obj,
+	}
+	return r
+}
+
+// GetIsTransferringPage whether a page is being transferred.
+//
+// Gets the value of TabView:is-transferring-page property.
+func (t *TabView) GetIsTransferringPage() bool {
+	r := gobool(C.hdy_tab_view_get_is_transferring_page(t.native()))
+	return r
+}
+
+// GetMenuModel gets the tab context menu model for t, see
+// (*TabView).SetMenuModel().
+func (t *TabView) GetMenuModel() *glib.MenuModel {
+	obj := glib.Take(unsafe.Pointer(C.hdy_tab_view_get_menu_model(t.native())))
+	r := &glib.MenuModel{
+		Object: obj,
+	}
+	return r
+}
+
+// GetNPages gets the number of pages in t.
+func (t *TabView) GetNPages() int {
+	r := int(C.hdy_tab_view_get_n_pages(t.native()))
+	return r
+}
+
+// GetNPinnedPages gets the number of pinned pages in t.
+//
+// See (*TabView).SetPagePinned().
+func (t *TabView) GetNPinnedPages() int {
+	r := int(C.hdy_tab_view_get_n_pinned_pages(t.native()))
+	return r
+}
+
+// GetNthPage gets the TabPage representing the child at position.
+func (t *TabView) GetNthPage(position int) *TabPage {
+	v1 := C.gint(position)
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_get_nth_page(t.native(), v1)))
+	return r
+}
+
+// GetPage gets the TabPage object representing child.
+func (t *TabView) GetPage(child gtk.IWidget) *TabPage {
+	v1 := cwidget(child)
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_get_page(t.native(), v1)))
+	return r
+}
+
+// GetPagePosition finds the position of page in t, starting from 0.
+func (t *TabView) GetPagePosition(page *TabPage) int {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	r := int(C.hdy_tab_view_get_page_position(t.native(), v1))
+	return r
+}
+
+// GetPages returns a Model containing the pages of t. This model can be used to
+// keep an up to date view of the pages.
+func (t *TabView) GetPages() *glib.ListModel {
+	obj := glib.Take(unsafe.Pointer(C.hdy_tab_view_get_pages(t.native())))
+	r := &glib.ListModel{
+		Object: obj,
+	}
+	return r
+}
+
+// GetSelectedPage gets the currently selected page in t.
+func (t *TabView) GetSelectedPage() *TabPage {
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_get_selected_page(t.native())))
+	return r
+}
+
+// GetShortcutWidget gets the shortcut widget for t, see
+// (*TabView).SetShortcutWidget().
+func (t *TabView) GetShortcutWidget() gtk.IWidget {
+	r, err := castWidget(C.hdy_tab_view_get_shortcut_widget(t.native()))
+	if err != nil {
+		panic("cast widget *C.GtkWidget failed: " + err.Error())
+	}
+	return r
+}
+
+// Insert inserts a non-pinned page at position.
+//
+// It's an error to try to insert a page before a pinned page, in that case
+// (*TabView).InsertPinned() should be used instead.
+func (t *TabView) Insert(child gtk.IWidget, position int) *TabPage {
+	v1 := cwidget(child)
+	v2 := C.gint(position)
+
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_insert(t.native(), v1, v2)))
+	return r
+}
+
+// InsertPinned inserts a pinned page at position.
+//
+// It's an error to try to insert a pinned page after a non-pinned page, in that
+// case (*TabView).Insert() should be used instead.
+func (t *TabView) InsertPinned(child gtk.IWidget, position int) *TabPage {
+	v1 := cwidget(child)
+	v2 := C.gint(position)
+
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_insert_pinned(t.native(), v1, v2)))
+	return r
+}
+
+// Prepend inserts child as the first non-pinned page.
+func (t *TabView) Prepend(child gtk.IWidget) *TabPage {
+	v1 := cwidget(child)
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_prepend(t.native(), v1)))
+	return r
+}
+
+// PrependPinned inserts child as the first pinned page.
+func (t *TabView) PrependPinned(child gtk.IWidget) *TabPage {
+	v1 := cwidget(child)
+	r := wrapTabPage(unsafe.Pointer(C.hdy_tab_view_prepend_pinned(t.native(), v1)))
+	return r
+}
+
+// ReorderBackward reorders page to before its previous page if possible.
+func (t *TabView) ReorderBackward(page *TabPage) bool {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	r := gobool(C.hdy_tab_view_reorder_backward(t.native(), v1))
+	return r
+}
+
+// ReorderFirst reorders page to the first possible position.
+func (t *TabView) ReorderFirst(page *TabPage) bool {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	r := gobool(C.hdy_tab_view_reorder_first(t.native(), v1))
+	return r
+}
+
+// ReorderForward reorders page to after its next page if possible.
+func (t *TabView) ReorderForward(page *TabPage) bool {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	r := gobool(C.hdy_tab_view_reorder_forward(t.native(), v1))
+	return r
+}
+
+// ReorderLast reorders page to the last possible position.
+func (t *TabView) ReorderLast(page *TabPage) bool {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	r := gobool(C.hdy_tab_view_reorder_last(t.native(), v1))
+	return r
+}
+
+// ReorderPage reorders page to position.
+//
+// It's a programmer error to try to reorder a pinned page after a non-pinned
+// one, or a non-pinned page before a pinned one.
+func (t *TabView) ReorderPage(page *TabPage, position int) bool {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	v2 := C.gint(position)
+
+	r := gobool(C.hdy_tab_view_reorder_page(t.native(), v1, v2))
+	return r
+}
+
+// SelectNextPage selects the page after the currently selected page.
+//
+// If the last page was already selected, this function does nothing.
+func (t *TabView) SelectNextPage() bool {
+	r := gobool(C.hdy_tab_view_select_next_page(t.native()))
+	return r
+}
+
+// SelectPreviousPage selects the page before the currently selected page.
+//
+// If the first page was already selected, this function does nothing.
+func (t *TabView) SelectPreviousPage() bool {
+	r := gobool(C.hdy_tab_view_select_previous_page(t.native()))
+	return r
+}
+
+// SetDefaultIcon sets default page icon for t.
+//
+// If a page doesn't provide its own icon via TabPage:icon, default icon may be
+// used instead for contexts where having an icon is necessary.
+//
+// TabBar will use default icon for pinned tabs in case the page is not loading,
+// doesn't have an icon and an indicator. Default icon is never used for tabs
+// that aren't pinned.
+//
+// By default, 'hdy-tab-icon-missing-symbolic' icon is used.
+func (t *TabView) SetDefaultIcon(defaultIcon *glib.Icon) {
+	v1 := (*C.GIcon)(unsafe.Pointer(defaultIcon.Native()))
+	C.hdy_tab_view_set_default_icon(t.native(), v1)
+}
+
+// SetMenuModel sets the tab context menu model for t.
+//
+// When a context menu is shown for a tab, it will be constructed from the
+// provided menu model. Use TabView::setup-menu signal to set up the menu
+// actions for the particular tab.
+func (t *TabView) SetMenuModel(menuModel *glib.MenuModel) {
+	v1 := (*C.GMenuModel)(unsafe.Pointer(menuModel.Native()))
+	C.hdy_tab_view_set_menu_model(t.native(), v1)
+}
+
+// SetPagePinned pins or unpins page.
+//
+// Pinned pages are guaranteed to be placed before all non-pinned pages; at any
+// given moment the first TabView:n-pinned-pages pages in t are guaranteed to be
+// pinned.
+//
+// When a page is pinned or unpinned, it's automatically reordered: pinning a
+// page moves it after other pinned pages; unpinning a page moves it before
+// other non-pinned pages.
+//
+// Pinned pages can still be reordered between each other.
+//
+// TabBar will display pinned pages in a compact form, never showing the title
+// or close button, and only showing a single icon, selected in the following
+// order:
+//
+// 1. TabPage:indicator-icon 2. A spinner if TabPage:loading is true 3.
+// TabPage:icon 4. TabView:default-icon
+//
+// Pinned pages cannot be closed by default, see TabView::close-page for how to
+// override that behavior.
+func (t *TabView) SetPagePinned(page *TabPage, pinned bool) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	v2 := cbool(pinned)
+
+	C.hdy_tab_view_set_page_pinned(t.native(), v1, v2)
+}
+
+// SetSelectedPage sets the currently selected page in t.
+func (t *TabView) SetSelectedPage(selectedPage *TabPage) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(selectedPage.Native()))
+	C.hdy_tab_view_set_selected_page(t.native(), v1)
+}
+
+// SetShortcutWidget sets the shortcut widget for t.
+//
+// Registers the following shortcuts on widget: * Ctrl+Page Up - switch to the
+// previous page * Ctrl+Page Down - switch to the next page * Ctrl+Home - switch
+// to the first page * Ctrl+End - switch to the last page * Ctrl+Shift+Page Up -
+// move the current page backward * Ctrl+Shift+Page Down - move the current page
+// forward * Ctrl+Shift+Home - move the current page at the start *
+// Ctrl+Shift+End - move the current page at the end * Ctrl+Tab - switch to the
+// next page, with looping * Ctrl+Shift+Tab - switch to the previous page, with
+// looping * Alt+1-9 - switch to pages 1-9 * Alt+0 - switch to page 10
+//
+// These shortcuts are always available on t, this function is useful if they
+// should be available globally.
+func (t *TabView) SetShortcutWidget(widget gtk.IWidget) {
+	v1 := cwidget(widget)
+	C.hdy_tab_view_set_shortcut_widget(t.native(), v1)
+}
+
+// TransferPage transfers page from t to other_view. The page object will be
+// reused.
+//
+// It's a programmer error to try to insert a pinned page after a non-pinned
+// one, or a non-pinned page before a pinned one.
+func (t *TabView) TransferPage(page *TabPage, otherView *TabView, position int) {
+	v1 := (*C.HdyTabPage)(unsafe.Pointer(page.Native()))
+	v2 := (*C.HdyTabView)(unsafe.Pointer(otherView.Widget.Native()))
+	v3 := C.gint(position)
+
+	C.hdy_tab_view_transfer_page(t.native(), v1, v2, v3)
 }
 
 type TitleBar struct {
